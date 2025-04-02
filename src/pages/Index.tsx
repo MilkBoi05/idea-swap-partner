@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Rocket, PlusCircle } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import IdeaCard from "@/components/ideas/IdeaCard";
-import { Idea } from "@/hooks/useIdeas";
+import { Idea, Collaborator, Comment } from "@/hooks/useIdeas";
 
 const featuredIdeas: Idea[] = [
   {
@@ -19,10 +19,10 @@ const featuredIdeas: Idea[] = [
       avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80",
     },
     skills: ["AI/ML", "UI/UX Design", "Mobile Development"],
-    collaborators: 2,
+    collaborators: [],
+    comments: [],
     likes: 24,
-    comments: 8,
-    createdAt: new Date().toISOString(), // Added createdAt property
+    createdAt: new Date().toISOString(),
   },
   {
     id: "2",
@@ -34,10 +34,10 @@ const featuredIdeas: Idea[] = [
       avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80",
     },
     skills: ["Blockchain", "Backend Development", "Product Management"],
-    collaborators: 3,
+    collaborators: [],
+    comments: [],
     likes: 18,
-    comments: 5,
-    createdAt: new Date().toISOString(), // Added createdAt property
+    createdAt: new Date().toISOString(),
   },
   {
     id: "3",
@@ -49,10 +49,10 @@ const featuredIdeas: Idea[] = [
       avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80",
     },
     skills: ["Frontend Development", "UI/UX Design", "Marketing"],
-    collaborators: 1,
+    collaborators: [],
+    comments: [],
     likes: 32,
-    comments: 12,
-    createdAt: new Date().toISOString(), // Added createdAt property
+    createdAt: new Date().toISOString(),
   },
 ];
 
@@ -192,3 +192,4 @@ const Index = () => {
 };
 
 export default Index;
+
