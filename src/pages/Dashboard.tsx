@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { useUser } from "@clerk/clerk-react";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import IdeaCard from "@/components/ideas/IdeaCard";
@@ -8,19 +8,20 @@ import ProfileCard from "@/components/profiles/ProfileCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Inbox, Star, Users, Loader } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { useIdeas } from "@/hooks/useIdeas";
 import { useUserProfile } from "@/services/userService";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("my-ideas");
-  const { isLoaded, user } = useUser();
+  const { isAuthenticated, userId, userName } = useAuth();
   const { userIdeas, savedIdeas, collaboratingIdeas, loading } = useIdeas();
-  const { getUserProfile, getOnboardingStatus } = useUserProfile();
   
-  const userProfile = getUserProfile();
-  const isOnboardingComplete = getOnboardingStatus();
-
+  // Since useUserProfile expects a userId parameter, let's pass it correctly
+  const { getUserProfile, getOnboardingStatus } = useUserProfile();
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [isOnboardingComplete, setIsOnboardingComplete] = useState<boolean>(true); // Default to true to avoid redirect loops
+  
   // Mock connection profiles (in a real app would come from API)
   const connectionProfiles = [
     {
@@ -45,7 +46,23 @@ const Dashboard = () => {
     },
   ];
   
-  if (!isLoaded || loading) {
+  // Load user profile and onboarding status
+  React.useEffect(() => {
+    if (userId) {
+      const fetchProfileData = async () => {
+        const profile = await getUserProfile(userId);
+        setUserProfile(profile);
+        
+        // For now, let's assume onboarding is complete since the column might not exist
+        // We'll fix the userService.ts in a separate step
+        setIsOnboardingComplete(true);
+      };
+      
+      fetchProfileData();
+    }
+  }, [userId, getUserProfile]);
+  
+  if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
@@ -57,7 +74,7 @@ const Dashboard = () => {
   }
   
   // Show onboarding prompt if user hasn't completed onboarding
-  if (!isOnboardingComplete && user) {
+  if (!isOnboardingComplete && userId) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />

@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { uploadIdeaImage } from "@/services/storageService";
 
 // Define the types for our idea data
 export type IdeaAuthor = {
@@ -81,7 +80,7 @@ export const useIdeas = () => {
       if (savedIdeasError) throw savedIdeasError;
       
       // Create a set of saved idea IDs for quick lookup
-      const savedIdeaIds = new Set(savedIdeasData.map(item => item.idea_id));
+      const savedIdeaIds = new Set(savedIdeasData ? savedIdeasData.map(item => item.idea_id) : []);
       
       // Fetch all profiles for authors
       const { data: profilesData, error: profilesError } = await supabase
@@ -92,62 +91,78 @@ export const useIdeas = () => {
       
       // Create a map of profiles by ID for quick lookup
       const profilesMap = new Map();
-      profilesData.forEach(profile => {
-        profilesMap.set(profile.id, profile);
-      });
+      if (profilesData) {
+        profilesData.forEach(profile => {
+          profilesMap.set(profile.id, profile);
+        });
+      }
       
       // Fetch collaborators for all ideas
       const { data: collaboratorsData, error: collaboratorsError } = await supabase
         .from('collaborators')
-        .select('*, profiles:user_id(*)');
+        .select('*');
       
       if (collaboratorsError) throw collaboratorsError;
       
       // Create a map of collaborators by idea ID
       const collaboratorsMap = new Map();
-      collaboratorsData.forEach(collab => {
-        const ideaId = collab.idea_id;
-        if (!collaboratorsMap.has(ideaId)) {
-          collaboratorsMap.set(ideaId, []);
+      if (collaboratorsData) {
+        for (const collab of collaboratorsData) {
+          const ideaId = collab.idea_id;
+          if (!collaboratorsMap.has(ideaId)) {
+            collaboratorsMap.set(ideaId, []);
+          }
+          
+          // Get profile for this collaborator
+          const profile = profilesMap.get(collab.user_id);
+          
+          if (profile) {
+            collaboratorsMap.get(ideaId).push({
+              id: collab.id,
+              name: profile.name || 'Unknown User',
+              avatar: profile.avatar || '/placeholder.svg',
+              role: collab.role
+            });
+          }
         }
-        collaboratorsMap.get(ideaId).push({
-          id: collab.id,
-          name: collab.profiles.name,
-          avatar: collab.profiles.avatar,
-          role: collab.role
-        });
-      });
+      }
       
       // Fetch comments for all ideas
       const { data: commentsData, error: commentsError } = await supabase
         .from('comments')
-        .select('*, profiles:author_id(*)')
+        .select('*')
         .order('created_at', { ascending: true });
       
       if (commentsError) throw commentsError;
       
       // Create a map of comments by idea ID
       const commentsMap = new Map();
-      commentsData.forEach(comment => {
-        const ideaId = comment.idea_id;
-        if (!commentsMap.has(ideaId)) {
-          commentsMap.set(ideaId, []);
-        }
-        commentsMap.get(ideaId).push({
-          id: comment.id,
-          text: comment.text,
-          createdAt: comment.created_at,
-          ideaId: comment.idea_id,
-          author: {
-            id: comment.profiles.id,
-            name: comment.profiles.name,
-            avatar: comment.profiles.avatar || '/placeholder.svg'
+      if (commentsData) {
+        for (const comment of commentsData) {
+          const ideaId = comment.idea_id;
+          if (!commentsMap.has(ideaId)) {
+            commentsMap.set(ideaId, []);
           }
-        });
-      });
+          
+          // Get profile for this comment author
+          const author = profilesMap.get(comment.author_id);
+          
+          commentsMap.get(ideaId).push({
+            id: comment.id,
+            text: comment.text,
+            createdAt: comment.created_at,
+            ideaId: comment.idea_id,
+            author: {
+              id: comment.author_id,
+              name: author ? author.name : 'Unknown User',
+              avatar: author ? author.avatar : '/placeholder.svg'
+            }
+          });
+        }
+      }
       
       // Transform ideas data
-      const transformedIdeas = ideasData.map(idea => {
+      const transformedIdeas = ideasData ? ideasData.map(idea => {
         const author = profilesMap.get(idea.author_id);
         return {
           id: idea.id,
@@ -167,7 +182,7 @@ export const useIdeas = () => {
           isSaved: savedIdeaIds.has(idea.id),
           isOwner: idea.author_id === userId
         };
-      });
+      }) : [];
       
       setIdeas(transformedIdeas);
       setUserIdeas(transformedIdeas.filter(idea => idea.author.id === userId));
@@ -209,7 +224,10 @@ export const useIdeas = () => {
       ));
       
       // Update saved ideas list
-      setSavedIdeas([...savedIdeas, ideas.find(idea => idea.id === ideaId)!]);
+      const ideaToSave = ideas.find(idea => idea.id === ideaId);
+      if (ideaToSave) {
+        setSavedIdeas([...savedIdeas, ideaToSave]);
+      }
       
       toast.success("Idea saved successfully");
     } catch (error: any) {
@@ -260,10 +278,17 @@ export const useIdeas = () => {
           author_id: userId,
           text: comment.text
         })
-        .select('*, profiles:author_id(*)')
+        .select()
         .single();
       
       if (error) throw error;
+      
+      // Get profile for the comment author
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
       
       // Transform the comment data
       const newComment: Comment = {
@@ -272,9 +297,9 @@ export const useIdeas = () => {
         ideaId: data.idea_id,
         createdAt: data.created_at,
         author: {
-          id: data.profiles.id,
-          name: data.profiles.name || userName || 'Anonymous User',
-          avatar: data.profiles.avatar || '/placeholder.svg'
+          id: userId || '',
+          name: profileData?.name || userName || 'Anonymous User',
+          avatar: profileData?.avatar || '/placeholder.svg'
         }
       };
       
@@ -314,7 +339,7 @@ export const useIdeas = () => {
         .insert({
           title: idea.title,
           description: idea.description,
-          skills: idea.skills,
+          skills: idea.skills || [],
           author_id: userId
         })
         .select()
@@ -323,24 +348,20 @@ export const useIdeas = () => {
       if (error) throw error;
       
       // Get author profile
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profileData } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
-      
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
-      }
       
       // Create new idea object
       const newIdea: Idea = {
         id: data.id,
         title: data.title,
         description: data.description,
-        skills: data.skills,
+        skills: data.skills || [],
         author: {
-          id: userId!,
+          id: userId || '',
           name: profileData?.name || userName || "Anonymous User",
           avatar: profileData?.avatar || "/placeholder.svg",
         },

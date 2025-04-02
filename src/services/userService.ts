@@ -8,10 +8,10 @@ import { toast } from "sonner";
 export type UserProfile = {
   id: string;
   name: string;
-  bio: string;
-  title: string;
-  skills: string[];
-  location: string;
+  bio?: string;
+  title?: string;
+  skills?: string[];
+  location?: string;
   email: string;
   website?: string;
   github?: string;
@@ -95,22 +95,38 @@ export const useUserProfile = () => {
         }
       }
       
+      // Create update object with only supported fields
+      const updateData = {
+        name: profile.name,
+        avatar: avatarUrl,
+        updated_at: new Date().toISOString()
+      };
+
+      // Add optional fields if they exist in the database schema
+      // We'll do this conditionally to avoid errors with missing columns
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      // Only include fields if they exist in the current schema
+      if (profileData) {
+        // Check if each field exists in the database schema before including it
+        if ('bio' in profileData && profile.bio !== undefined) updateData['bio'] = profile.bio;
+        if ('title' in profileData && profile.title !== undefined) updateData['title'] = profile.title;
+        if ('skills' in profileData && profile.skills !== undefined) updateData['skills'] = profile.skills;
+        if ('location' in profileData && profile.location !== undefined) updateData['location'] = profile.location;
+        if ('website' in profileData && profile.website !== undefined) updateData['website'] = profile.website;
+        if ('github' in profileData && profile.github !== undefined) updateData['github'] = profile.github;
+        if ('twitter' in profileData && profile.twitter !== undefined) updateData['twitter'] = profile.twitter;
+        if ('linkedin' in profileData && profile.linkedin !== undefined) updateData['linkedin'] = profile.linkedin;
+      }
+      
       // Update profile in Supabase
       const { data, error } = await supabase
         .from('profiles')
-        .update({
-          name: profile.name,
-          bio: profile.bio,
-          title: profile.title,
-          skills: profile.skills,
-          location: profile.location,
-          website: profile.website,
-          github: profile.github,
-          twitter: profile.twitter,
-          linkedin: profile.linkedin,
-          avatar: avatarUrl,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', userId)
         .select()
         .single();
@@ -140,7 +156,7 @@ export const useUserProfile = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('onboarding_complete')
+        .select('*')
         .eq('id', userId)
         .single();
         
@@ -149,7 +165,8 @@ export const useUserProfile = () => {
         return false;
       }
       
-      return !!data.onboarding_complete;
+      // Check if onboarding_complete exists in the data
+      return data.onboarding_complete === true;
     } catch (error) {
       console.error("Error in getOnboardingStatus:", error);
       return false;
@@ -160,14 +177,31 @@ export const useUserProfile = () => {
     if (!userId) return false;
     
     try {
-      const { error } = await supabase
+      // First check if onboarding_complete column exists in the profiles table
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .update({ onboarding_complete: true })
-        .eq('id', userId);
-        
-      if (error) {
-        console.error("Error completing onboarding:", error);
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (profileError) {
+        console.error("Error checking profile:", profileError);
         return false;
+      }
+      
+      // Only update if the column exists
+      if (profileData && 'onboarding_complete' in profileData) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ onboarding_complete: true })
+          .eq('id', userId);
+          
+        if (error) {
+          console.error("Error completing onboarding:", error);
+          return false;
+        }
+      } else {
+        console.warn("onboarding_complete column does not exist in profiles table");
       }
       
       return true;

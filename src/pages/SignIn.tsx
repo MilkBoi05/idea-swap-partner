@@ -32,7 +32,7 @@ const SignIn = () => {
   return (
     <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gray-50">
       <div className="mb-8">
-        <Logo size="large" />
+        <Logo />
       </div>
       
       <Card className="w-full max-w-md">

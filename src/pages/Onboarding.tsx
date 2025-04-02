@@ -1,349 +1,195 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import Navbar from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import SkillTag from "@/components/skills/SkillTag";
-import { ArrowRight, CheckCircle, UploadCloud } from "lucide-react";
-import Logo from "@/components/branding/Logo";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUserProfile } from "@/services/userService";
-import { useToast } from "@/hooks/use-toast";
-import { useUser } from "@clerk/clerk-react";
-
-const allSkills = [
-  "Web Development", "Mobile Development", "UI/UX Design", "Frontend", "Backend",
-  "Full Stack", "DevOps", "Cloud", "Database", "AI/ML", "Blockchain",
-  "IoT", "Marketing", "SEO", "Content Writing", "Social Media",
-  "Product Management", "Project Management", "Business Development", "Sales",
-  "Finance", "Accounting", "Legal", "HR", "Customer Support"
-];
 
 const Onboarding = () => {
+  const { userId } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { user } = useUser();
   const { updateUserProfile, completeOnboarding } = useUserProfile();
   
-  const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
-    name: user?.fullName || user?.username || "",
-    title: "",
-    bio: "",
-    location: "",
-    selectedSkills: [] as string[],
-    interests: [] as string[],
-    profilePicture: null as File | null,
-  });
+  const [name, setName] = useState("");
+  const [title, setTitle] = useState("");
+  const [bio, setBio] = useState("");
+  const [location, setLocation] = useState("");
+  const [skills, setSkills] = useState<string[]>([]);
+  const [newSkill, setNewSkill] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
   
-  const toggleSkill = (skill: string) => {
-    if (formData.selectedSkills.includes(skill)) {
-      setFormData({
-        ...formData,
-        selectedSkills: formData.selectedSkills.filter(s => s !== skill),
+  const handleAddSkill = () => {
+    if (newSkill.trim() && !skills.includes(newSkill.trim())) {
+      setSkills([...skills, newSkill.trim()]);
+      setNewSkill("");
+    }
+  };
+  
+  const handleRemoveSkill = (skillToRemove: string) => {
+    setSkills(skills.filter(skill => skill !== skillToRemove));
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!userId) {
+      setError("You must be signed in to complete your profile");
+      return;
+    }
+    
+    if (!name) {
+      setError("Name is required");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    setError("");
+    
+    try {
+      // Update user profile with the form data
+      await updateUserProfile(userId, {
+        name,
+        title,
+        bio,
+        skills,
+        location
       });
-    } else {
-      setFormData({
-        ...formData,
-        selectedSkills: [...formData.selectedSkills, skill],
-      });
-    }
-  };
-  
-  const toggleInterest = (interest: string) => {
-    if (formData.interests.includes(interest)) {
-      setFormData({
-        ...formData,
-        interests: formData.interests.filter(i => i !== interest),
-      });
-    } else {
-      setFormData({
-        ...formData,
-        interests: [...formData.interests, interest],
-      });
-    }
-  };
-  
-  const handleNextStep = async () => {
-    if (step < 4) {
-      setStep(step + 1);
-    } else {
-      try {
-        await updateUserProfile({
-          name: formData.name,
-          title: formData.title,
-          bio: formData.bio,
-          skills: formData.selectedSkills,
-          location: formData.location,
-        }, formData.profilePicture);
-
-        completeOnboarding();
-        
-        toast({
-          title: "Profile completed!",
-          description: "Your profile has been set up successfully.",
-        });
-        
-        navigate("/dashboard");
-      } catch (error) {
-        console.error("Error saving profile:", error);
-        toast({
-          title: "Error",
-          description: "There was an error saving your profile. Please try again.",
-          variant: "destructive",
-        });
-      }
-    }
-  };
-  
-  const handlePreviousStep = () => {
-    if (step > 1) {
-      setStep(step - 1);
-    }
-  };
-  
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFormData({
-        ...formData,
-        profilePicture: e.target.files[0],
-      });
-    }
-  };
-  
-  const isNextDisabled = () => {
-    switch (step) {
-      case 1:
-        return !formData.name;
-      case 2:
-        return formData.selectedSkills.length === 0;
-      case 3:
-        return formData.interests.length === 0;
-      default:
-        return false;
-    }
-  };
-  
-  return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <div className="p-4 flex justify-center">
-        <Logo />
-      </div>
       
-      <div className="flex-1 flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-3xl">
-          <div className="flex justify-between items-center mb-8">
-            {[1, 2, 3, 4].map((s) => (
-              <div key={s} className="flex items-center">
-                <div
-                  className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                    s === step
-                      ? "bg-blue-500 text-white"
-                      : s < step
-                      ? "bg-green-500 text-white"
-                      : "bg-gray-200 text-gray-600"
-                  }`}
-                >
-                  {s < step ? <CheckCircle className="h-5 w-5" /> : s}
+      // Mark onboarding as complete
+      await completeOnboarding(userId);
+      
+      // Redirect to dashboard
+      navigate("/dashboard");
+    } catch (err: any) {
+      console.error("Error updating profile:", err);
+      setError(err.message || "Failed to update profile");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      
+      <div className="flex-1 container max-w-4xl mx-auto px-4 py-8">
+        <Card>
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold">Complete Your Profile</CardTitle>
+            <CardDescription>Tell us more about yourself to get the most out of JumpStart</CardDescription>
+          </CardHeader>
+          
+          <form onSubmit={handleSubmit}>
+            <CardContent className="space-y-6">
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                  {error}
                 </div>
-                {s < 4 && (
-                  <div
-                    className={`w-20 h-1 hidden sm:block ${
-                      s < step ? "bg-green-500" : "bg-gray-200"
-                    }`}
+              )}
+              
+              <div className="space-y-2">
+                <label htmlFor="name" className="text-sm font-medium">
+                  Full Name *
+                </label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="John Doe"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="title" className="text-sm font-medium">
+                  Professional Title
+                </label>
+                <Input
+                  id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Full-stack Developer"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="bio" className="text-sm font-medium">
+                  Bio
+                </label>
+                <Textarea
+                  id="bio"
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder="Tell us about yourself, your interests, and what you hope to achieve with JumpStart"
+                  rows={4}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="location" className="text-sm font-medium">
+                  Location
+                </label>
+                <Input
+                  id="location"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="City, Country"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="skills" className="text-sm font-medium">
+                  Skills
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    id="skills"
+                    value={newSkill}
+                    onChange={(e) => setNewSkill(e.target.value)}
+                    placeholder="Add a skill (e.g., JavaScript, Design)"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddSkill();
+                      }
+                    }}
                   />
+                  <Button type="button" onClick={handleAddSkill}>Add</Button>
+                </div>
+                
+                {skills.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {skills.map((skill) => (
+                      <div
+                        key={skill}
+                        className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm flex items-center gap-1"
+                      >
+                        {skill}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSkill(skill)}
+                          className="text-blue-700 hover:text-blue-900"
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
-            ))}
-          </div>
-          
-          <Card className="w-full">
-            {step === 1 && (
-              <>
-                <CardHeader>
-                  <CardTitle className="text-2xl">Welcome to JumpStart!</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-gray-600 mb-4">
-                    Let's set up your profile so you can connect with other entrepreneurs and skilled professionals.
-                  </p>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="name">What's your name?</Label>
-                    <Input
-                      id="name"
-                      placeholder="Full name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Professional title</Label>
-                    <Input
-                      id="title"
-                      placeholder="e.g. Software Engineer, UI Designer, Marketing Specialist"
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="bio">Short bio</Label>
-                    <Textarea
-                      id="bio"
-                      placeholder="Tell us a bit about yourself..."
-                      value={formData.bio}
-                      onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="location">Location</Label>
-                    <Input
-                      id="location"
-                      placeholder="City, Country"
-                      value={formData.location}
-                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    />
-                  </div>
-                </CardContent>
-              </>
-            )}
+            </CardContent>
             
-            {step === 2 && (
-              <>
-                <CardHeader>
-                  <CardTitle className="text-2xl">What are your skills?</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-gray-600 mb-4">
-                    Select the skills you have that would be valuable for collaboration.
-                  </p>
-                  
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {allSkills.map((skill) => (
-                      <SkillTag
-                        key={skill}
-                        name={skill}
-                        selected={formData.selectedSkills.includes(skill)}
-                        onClick={() => toggleSkill(skill)}
-                      />
-                    ))}
-                  </div>
-                </CardContent>
-              </>
-            )}
-            
-            {step === 3 && (
-              <>
-                <CardHeader>
-                  <CardTitle className="text-2xl">What are you interested in?</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-gray-600 mb-4">
-                    Select the areas you're interested in for potential projects.
-                  </p>
-                  
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {[
-                      "SaaS", "E-commerce", "FinTech", "EdTech", "HealthTech", 
-                      "AI", "Mobile Apps", "Web Apps", "Gaming", "Social Media",
-                      "Climate Tech", "Hardware", "Marketplace", "B2B", "B2C",
-                      "Consumer Products", "Enterprise Software"
-                    ].map((interest) => (
-                      <SkillTag
-                        key={interest}
-                        name={interest}
-                        selected={formData.interests.includes(interest)}
-                        onClick={() => toggleInterest(interest)}
-                      />
-                    ))}
-                  </div>
-                </CardContent>
-              </>
-            )}
-            
-            {step === 4 && (
-              <>
-                <CardHeader>
-                  <CardTitle className="text-2xl">Add a profile picture</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-gray-600 mb-4">
-                    Upload a profile picture to make your profile stand out.
-                  </p>
-                  
-                  <div className="flex flex-col items-center justify-center">
-                    <div className="mb-4">
-                      {formData.profilePicture ? (
-                        <div className="relative w-32 h-32">
-                          <img
-                            src={URL.createObjectURL(formData.profilePicture)}
-                            alt="Profile"
-                            className="w-full h-full rounded-full object-cover"
-                          />
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="absolute bottom-0 right-0 bg-white rounded-full"
-                            onClick={() => setFormData({ ...formData, profilePicture: null })}
-                          >
-                            <UploadCloud className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ) : user?.imageUrl ? (
-                        <div className="relative w-32 h-32">
-                          <img
-                            src={user.imageUrl}
-                            alt="Profile"
-                            className="w-full h-full rounded-full object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-32 h-32 border-2 border-dashed border-gray-300 rounded-full flex items-center justify-center bg-gray-50">
-                          <UploadCloud className="h-10 w-10 text-gray-400" />
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div>
-                      <Input
-                        id="profilePicture"
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleFileChange}
-                      />
-                      <Label
-                        htmlFor="profilePicture"
-                        className="cursor-pointer inline-flex items-center px-4 py-2 bg-gray-100 border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-200"
-                      >
-                        {formData.profilePicture ? "Change Photo" : "Upload Photo"}
-                      </Label>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-6 text-center">
-                    <p className="text-gray-600">
-                      This step is optional. You can always add or change your profile picture later.
-                    </p>
-                  </div>
-                </CardContent>
-              </>
-            )}
-            
-            <CardFooter className="flex justify-between">
-              <Button variant="outline" onClick={handlePreviousStep} disabled={step === 1}>
-                Back
-              </Button>
-              <Button onClick={handleNextStep} disabled={isNextDisabled()}>
-                {step < 4 ? "Next" : "Finish"} <ArrowRight className="ml-2 h-4 w-4" />
+            <CardFooter>
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Saving..." : "Complete Profile Setup"}
               </Button>
             </CardFooter>
-          </Card>
-        </div>
+          </form>
+        </Card>
       </div>
     </div>
   );
