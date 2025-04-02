@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +11,11 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import SkillTag from "@/components/skills/SkillTag";
 import IdeaCard from "@/components/ideas/IdeaCard";
 import { useIdeas } from "@/hooks/useIdeas";
-import { Edit3, UploadCloud } from "lucide-react";
+import { Edit3, UploadCloud, Briefcase, Calendar, List, Search } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/services/userService";
+import { toast } from "sonner";
+import UserSearch from "@/components/users/UserSearch";
 
 const allSkills = [
   "Web Development", "Mobile Development", "UI/UX Design", "Frontend", "Backend",
@@ -21,20 +26,49 @@ const allSkills = [
 ];
 
 const Profile = () => {
-  const { userIdeas, collaboratingIdeas } = useIdeas();
+  const navigate = useNavigate();
+  const { userId, userEmail } = useAuth();
+  const { getUserProfile, updateUserProfile, loading } = useUserProfile();
+  const { userIdeas, collaboratingIdeas, loading: ideasLoading } = useIdeas();
+  
   const [editMode, setEditMode] = useState(false);
-  const [selectedSkills, setSelectedSkills] = useState<string[]>(["UI/UX Design", "Frontend", "Product Management"]);
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [profileForm, setProfileForm] = useState({
-    name: "Alex Johnson",
-    title: "Product Designer & Frontend Developer",
-    location: "San Francisco, CA",
-    bio: "Passionate product designer and frontend developer with 7+ years of experience. I love creating user-friendly interfaces and turning ideas into reality.",
-    email: "alex@example.com",
-    website: "https://alexjohnson.dev",
-    github: "alexjohnson",
-    twitter: "alexjohnson",
-    linkedin: "alexjohnson"
+    name: "",
+    title: "",
+    location: "",
+    bio: "",
+    email: "",
+    website: "",
+    github: "",
+    twitter: "",
+    linkedin: ""
   });
+  
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (userId) {
+        const profile = await getUserProfile(userId);
+        if (profile) {
+          setProfileForm({
+            name: profile.name || "",
+            title: profile.title || "",
+            location: profile.location || "",
+            bio: profile.bio || "",
+            email: profile.email || userEmail || "",
+            website: profile.website || "",
+            github: profile.github || "",
+            twitter: profile.twitter || "",
+            linkedin: profile.linkedin || ""
+          });
+          
+          setSelectedSkills(profile.skills || []);
+        }
+      }
+    };
+    
+    loadProfile();
+  }, [userId, getUserProfile, userEmail]);
   
   const handleProfileChange = (field: string, value: string) => {
     setProfileForm(prev => ({
@@ -51,9 +85,28 @@ const Profile = () => {
     }
   };
   
-  const handleSaveProfile = () => {
-    console.log("Saving profile:", profileForm, selectedSkills);
-    setEditMode(false);
+  const handleSaveProfile = async () => {
+    if (!userId) return;
+    
+    try {
+      await updateUserProfile(userId, {
+        name: profileForm.name,
+        title: profileForm.title,
+        bio: profileForm.bio,
+        location: profileForm.location,
+        skills: selectedSkills,
+        website: profileForm.website,
+        github: profileForm.github,
+        twitter: profileForm.twitter,
+        linkedin: profileForm.linkedin
+      });
+      
+      setEditMode(false);
+      toast.success("Profile updated successfully");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.error("Failed to update profile");
+    }
   };
   
   return (
@@ -61,6 +114,21 @@ const Profile = () => {
       <Navbar />
       
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 flex flex-col">
+        <div className="mb-6 flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => navigate('/dashboard')} className="flex items-center gap-2">
+            <List size={16} />
+            Dashboard
+          </Button>
+          <Button variant="outline" onClick={() => navigate('/project/1')} className="flex items-center gap-2">
+            <Briefcase size={16} />
+            Project Board
+          </Button>
+          <Button variant="outline" onClick={() => navigate('/project/1/tasks')} className="flex items-center gap-2">
+            <Calendar size={16} />
+            Project Tasks
+          </Button>
+        </div>
+
         <div className="bg-white shadow rounded-lg overflow-hidden mb-8">
           <div className="h-32 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
           <div className="px-4 py-5 sm:p-6">
@@ -70,7 +138,7 @@ const Profile = () => {
                   <div className="relative">
                     <Avatar className="w-24 h-24 border-4 border-white">
                       <AvatarImage src="/placeholder.svg" alt="Profile" />
-                      <AvatarFallback>AJ</AvatarFallback>
+                      <AvatarFallback>{profileForm.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     {editMode && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
@@ -89,7 +157,7 @@ const Profile = () => {
                       className="font-bold text-xl mb-1 w-72"
                     />
                   ) : (
-                    <p className="text-xl font-bold text-gray-900">{profileForm.name}</p>
+                    <p className="text-xl font-bold text-gray-900">{profileForm.name || "Your Name"}</p>
                   )}
                   
                   {editMode ? (
@@ -97,9 +165,10 @@ const Profile = () => {
                       value={profileForm.title}
                       onChange={(e) => handleProfileChange('title', e.target.value)}
                       className="text-sm text-gray-500 mb-1 w-72"
+                      placeholder="Your professional title"
                     />
                   ) : (
-                    <p className="text-sm text-gray-500">{profileForm.title}</p>
+                    <p className="text-sm text-gray-500">{profileForm.title || "Add your professional title"}</p>
                   )}
                   
                   {editMode ? (
@@ -107,9 +176,10 @@ const Profile = () => {
                       value={profileForm.location}
                       onChange={(e) => handleProfileChange('location', e.target.value)}
                       className="text-sm text-gray-500 w-72"
+                      placeholder="Your location"
                     />
                   ) : (
-                    <p className="text-sm text-gray-500">{profileForm.location}</p>
+                    <p className="text-sm text-gray-500">{profileForm.location || "Add your location"}</p>
                   )}
                 </div>
               </div>
@@ -119,8 +189,8 @@ const Profile = () => {
                     <Button variant="ghost" onClick={() => setEditMode(false)}>
                       Cancel
                     </Button>
-                    <Button onClick={handleSaveProfile}>
-                      Save Profile
+                    <Button onClick={handleSaveProfile} disabled={loading}>
+                      {loading ? "Saving..." : "Save Profile"}
                     </Button>
                   </div>
                 ) : (
@@ -138,6 +208,7 @@ const Profile = () => {
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="ideas">My Ideas</TabsTrigger>
             <TabsTrigger value="collaborating">Collaborating</TabsTrigger>
+            <TabsTrigger value="search">Search Users</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
           
@@ -350,6 +421,17 @@ const Profile = () => {
                 </div>
               )}
             </div>
+          </TabsContent>
+          
+          <TabsContent value="search">
+            <Card>
+              <CardHeader>
+                <CardTitle>Find Users</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <UserSearch />
+              </CardContent>
+            </Card>
           </TabsContent>
           
           <TabsContent value="settings">
