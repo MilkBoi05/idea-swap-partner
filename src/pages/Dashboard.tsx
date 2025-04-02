@@ -1,100 +1,78 @@
 
 import { useState } from "react";
+import { useUser } from "@clerk/clerk-react";
 import Navbar from "@/components/layout/Navbar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import IdeaCard, { Idea } from "@/components/ideas/IdeaCard";
-import ProfileCard, { Profile } from "@/components/profiles/ProfileCard";
+import IdeaCard from "@/components/ideas/IdeaCard";
+import ProfileCard from "@/components/profiles/ProfileCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Inbox, Star, Users } from "lucide-react";
+import { Inbox, Star, Users, Loader } from "lucide-react";
 import { Link } from "react-router-dom";
-
-const myIdeas: Idea[] = [
-  {
-    id: "7",
-    title: "Educational AR App for STEM Learning",
-    description: "Augmented reality application that makes complex STEM concepts visual and interactive for K-12 students.",
-    author: {
-      name: "You",
-      avatar: "/placeholder.svg",
-    },
-    skills: ["Mobile Development", "AR/VR", "UI/UX Design"],
-    collaborators: 1,
-    likes: 12,
-    comments: 4,
-  },
-];
-
-const collaboratingIdeas: Idea[] = [
-  {
-    id: "5",
-    title: "Peer-to-Peer Skill Sharing Marketplace",
-    description: "A platform where people can teach their skills to others and learn new skills in return, using time as currency.",
-    author: {
-      name: "Jordan Patel",
-      avatar: "/placeholder.svg",
-    },
-    skills: ["Frontend Development", "Backend Development", "Marketing"],
-    collaborators: 1,
-    likes: 27,
-    comments: 9,
-  },
-];
-
-const savedIdeas: Idea[] = [
-  {
-    id: "3",
-    title: "Virtual Coworking Space for Remote Teams",
-    description: "Creating a virtual environment that replicates the serendipitous interactions and collaborative atmosphere of physical offices for remote teams.",
-    author: {
-      name: "Morgan Lee",
-      avatar: "/placeholder.svg",
-    },
-    skills: ["Frontend Development", "UI/UX Design", "Marketing"],
-    collaborators: 1,
-    likes: 32,
-    comments: 12,
-  },
-  {
-    id: "6",
-    title: "Mental Health Chatbot for Teens",
-    description: "An AI-powered chatbot designed to provide mental health support and resources for teenagers in a friendly, non-judgmental way.",
-    author: {
-      name: "Casey Rivera",
-      avatar: "/placeholder.svg",
-    },
-    skills: ["AI/ML", "UI/UX Design", "Psychology"],
-    collaborators: 2,
-    likes: 41,
-    comments: 15,
-  },
-];
-
-const connectionProfiles: Profile[] = [
-  {
-    id: "1",
-    name: "Sam Wilson",
-    avatar: "/placeholder.svg",
-    bio: "Full-stack developer with 5 years of experience. Passionate about building products that solve real problems.",
-    skills: ["Frontend Development", "Backend Development", "DevOps"],
-    location: "San Francisco, CA",
-    ideas: 2,
-    collaborations: 4,
-  },
-  {
-    id: "2",
-    name: "Priya Sharma",
-    avatar: "/placeholder.svg",
-    bio: "UX/UI designer specializing in user-centered design processes. Looking to collaborate on innovative products.",
-    skills: ["UI/UX Design", "Product Design", "User Research"],
-    location: "New York, NY",
-    ideas: 1,
-    collaborations: 3,
-  },
-];
+import { useIdeas } from "@/hooks/useIdeas";
+import { useUserProfile } from "@/services/userService";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("my-ideas");
+  const { isLoaded, user } = useUser();
+  const { userIdeas, savedIdeas, collaboratingIdeas, loading } = useIdeas();
+  const { getUserProfile, getOnboardingStatus } = useUserProfile();
+  
+  const userProfile = getUserProfile();
+  const isOnboardingComplete = getOnboardingStatus();
+
+  // Mock connection profiles (in a real app would come from API)
+  const connectionProfiles = [
+    {
+      id: "1",
+      name: "Sam Wilson",
+      avatar: "/placeholder.svg",
+      bio: "Full-stack developer with 5 years of experience. Passionate about building products that solve real problems.",
+      skills: ["Frontend Development", "Backend Development", "DevOps"],
+      location: "San Francisco, CA",
+      ideas: 2,
+      collaborations: 4,
+    },
+    {
+      id: "2",
+      name: "Priya Sharma",
+      avatar: "/placeholder.svg",
+      bio: "UX/UI designer specializing in user-centered design processes. Looking to collaborate on innovative products.",
+      skills: ["UI/UX Design", "Product Design", "User Research"],
+      location: "New York, NY",
+      ideas: 1,
+      collaborations: 3,
+    },
+  ];
+  
+  if (!isLoaded || loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+  
+  // Show onboarding prompt if user hasn't completed onboarding
+  if (!isOnboardingComplete && user) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="max-w-md mx-auto my-16 p-6 bg-white rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold mb-4">Complete Your Profile</h2>
+          <p className="text-gray-600 mb-6">
+            To get the most out of JumpStart, please complete your profile setup.
+          </p>
+          <Button asChild className="w-full">
+            <Link to="/onboarding">Complete Profile Setup</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -122,7 +100,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-gray-500 text-sm">My Ideas</p>
-                <p className="text-2xl font-bold">{myIdeas.length}</p>
+                <p className="text-2xl font-bold">{userIdeas.length}</p>
               </div>
             </CardContent>
           </Card>
@@ -160,9 +138,9 @@ const Dashboard = () => {
           </TabsList>
           
           <TabsContent value="my-ideas">
-            {myIdeas.length > 0 ? (
+            {userIdeas.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {myIdeas.map((idea) => (
+                {userIdeas.map((idea) => (
                   <IdeaCard key={idea.id} idea={idea} />
                 ))}
                 <Card className="flex items-center justify-center border-dashed h-full min-h-[300px]">

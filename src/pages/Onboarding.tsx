@@ -7,8 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import SkillTag from "@/components/skills/SkillTag";
-import { ArrowRight, CheckCircle, UploadCloud, Rocket } from "lucide-react";
+import { ArrowRight, CheckCircle, UploadCloud } from "lucide-react";
 import Logo from "@/components/branding/Logo";
+import { useUserProfile } from "@/services/userService";
+import { useToast } from "@/components/ui/use-toast";
+import { useUser } from "@clerk/clerk-react";
 
 const allSkills = [
   "Web Development", "Mobile Development", "UI/UX Design", "Frontend", "Backend",
@@ -20,9 +23,13 @@ const allSkills = [
 
 const Onboarding = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { user } = useUser();
+  const { updateUserProfile, completeOnboarding } = useUserProfile();
+  
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
-    name: "",
+    name: user?.fullName || user?.username || "",
     title: "",
     bio: "",
     location: "",
@@ -63,8 +70,23 @@ const Onboarding = () => {
     if (step < 4) {
       setStep(step + 1);
     } else {
-      // In a real app, this would submit the data to the backend
-      console.log("Onboarding complete:", formData);
+      // Save user profile data
+      updateUserProfile({
+        name: formData.name,
+        title: formData.title,
+        bio: formData.bio,
+        skills: formData.selectedSkills,
+        location: formData.location,
+      });
+
+      // Mark onboarding as complete
+      completeOnboarding();
+      
+      toast({
+        title: "Profile completed!",
+        description: "Your profile has been set up successfully.",
+      });
+      
       // Redirect to the dashboard
       navigate("/dashboard");
     }
@@ -263,8 +285,16 @@ const Onboarding = () => {
                             className="absolute bottom-0 right-0 bg-white rounded-full"
                             onClick={() => setFormData({ ...formData, profilePicture: null })}
                           >
-                            <Rocket className="h-4 w-4" />
+                            <UploadCloud className="h-4 w-4" />
                           </Button>
+                        </div>
+                      ) : user?.imageUrl ? (
+                        <div className="relative w-32 h-32">
+                          <img
+                            src={user.imageUrl}
+                            alt="Profile"
+                            className="w-full h-full rounded-full object-cover"
+                          />
                         </div>
                       ) : (
                         <div className="w-32 h-32 border-2 border-dashed border-gray-300 rounded-full flex items-center justify-center bg-gray-50">

@@ -1,15 +1,19 @@
 
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, MessageSquare, LayoutDashboard, User } from "lucide-react";
+import { Menu, X, MessageSquare, LayoutDashboard, User, LogOut } from "lucide-react";
 import Logo from "@/components/branding/Logo";
-import { SignInButton, SignUpButton, UserButton, useAuth } from "@clerk/clerk-react";
+import { SignInButton, SignUpButton, UserButton, useAuth, useUser } from "@clerk/clerk-react";
+import { useToast } from "@/components/ui/use-toast";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
-  const { isSignedIn } = useAuth();
+  const navigate = useNavigate();
+  const { isSignedIn, isLoaded, signOut } = useAuth();
+  const { user } = useUser();
+  const { toast } = useToast();
 
   const navItems = [
     { name: "Browse Ideas", path: "/browse", icon: <LayoutDashboard className="w-4 h-4" /> },
@@ -23,12 +27,23 @@ const Navbar = () => {
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
+  const handleSignOut = async () => {
+    await signOut();
+    toast({
+      title: "Signed out successfully",
+      description: "You have been signed out of your account.",
+    });
+    navigate("/");
+  };
+
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Logo />
+            <Link to="/">
+              <Logo />
+            </Link>
           </div>
           
           {/* Desktop Navigation */}
@@ -51,14 +66,19 @@ const Navbar = () => {
             </div>
             <div className="flex items-center space-x-2">
               {isSignedIn ? (
-                <UserButton 
-                  afterSignOutUrl="/"
-                  appearance={{
-                    elements: {
-                      userButtonAvatarBox: "w-9 h-9"
-                    }
-                  }}
-                />
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-gray-600">
+                    {user?.fullName || user?.username}
+                  </span>
+                  <UserButton 
+                    afterSignOutUrl="/"
+                    appearance={{
+                      elements: {
+                        userButtonAvatarBox: "w-9 h-9"
+                      }
+                    }}
+                  />
+                </div>
               ) : (
                 <>
                   <SignInButton mode="modal">
@@ -109,15 +129,27 @@ const Navbar = () => {
           <div className="pt-4 pb-3 border-t border-gray-200">
             <div className="px-4 flex items-center justify-center space-x-2">
               {isSignedIn ? (
-                <div className="flex justify-center w-full py-2">
-                  <UserButton 
-                    afterSignOutUrl="/"
-                    appearance={{
-                      elements: {
-                        userButtonAvatarBox: "w-9 h-9"
-                      }
-                    }}
-                  />
+                <div className="flex flex-col items-center w-full py-2">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <span className="text-sm text-gray-600">
+                      {user?.fullName || user?.username}
+                    </span>
+                    <UserButton 
+                      afterSignOutUrl="/"
+                      appearance={{
+                        elements: {
+                          userButtonAvatarBox: "w-9 h-9"
+                        }
+                      }}
+                    />
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex items-center justify-center gap-2"
+                    onClick={handleSignOut}
+                  >
+                    <LogOut className="w-4 h-4" /> Sign Out
+                  </Button>
                 </div>
               ) : (
                 <>
