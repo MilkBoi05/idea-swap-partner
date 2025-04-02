@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -59,15 +59,18 @@ const IdeaForm = ({ onSubmit }: IdeaFormProps) => {
     },
   });
 
+  // Fix: Use useEffect to update the form value when selectedSkills changes
+  // instead of updating during render
+  useEffect(() => {
+    form.setValue("skills", selectedSkills);
+  }, [selectedSkills, form]);
+
   const toggleSkill = (skill: string) => {
     setSelectedSkills((prev) => {
       const isSelected = prev.includes(skill);
-      const updatedSkills = isSelected
+      return isSelected
         ? prev.filter((s) => s !== skill)
         : [...prev, skill];
-      
-      form.setValue("skills", updatedSkills);
-      return updatedSkills;
     });
   };
 

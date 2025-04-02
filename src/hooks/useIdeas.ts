@@ -23,54 +23,62 @@ export type Idea = {
   isOwner?: boolean;
 };
 
-// Placeholder data - in a real app this would come from an API
-const mockIdeas: Idea[] = [
-  {
-    id: "1",
-    title: "AI-Powered Recipe Generator for Dietary Restrictions",
-    description: "An app that creates personalized recipe recommendations based on dietary restrictions, allergies, and ingredient availability using AI.",
-    author: {
-      id: "user_123",
-      name: "Alex Johnson",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80",
+// Get stored ideas from localStorage or use default mock ideas
+const getStoredIdeas = (): Idea[] => {
+  const storedIdeas = localStorage.getItem('ideas');
+  if (storedIdeas) {
+    return JSON.parse(storedIdeas);
+  }
+  
+  // Default mock ideas if none stored
+  return [
+    {
+      id: "1",
+      title: "AI-Powered Recipe Generator for Dietary Restrictions",
+      description: "An app that creates personalized recipe recommendations based on dietary restrictions, allergies, and ingredient availability using AI.",
+      author: {
+        id: "user_123",
+        name: "Alex Johnson",
+        avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80",
+      },
+      skills: ["AI/ML", "UI/UX Design", "Mobile Development"],
+      collaborators: 2,
+      likes: 24,
+      comments: 8,
+      createdAt: new Date().toISOString(),
     },
-    skills: ["AI/ML", "UI/UX Design", "Mobile Development"],
-    collaborators: 2,
-    likes: 24,
-    comments: 8,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    title: "Blockchain Solution for Supply Chain Verification",
-    description: "A transparent, immutable system to track products from origin to consumer with blockchain technology.",
-    author: {
-      id: "user_456",
-      name: "Taylor Smith",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80",
+    {
+      id: "2",
+      title: "Blockchain Solution for Supply Chain Verification",
+      description: "A transparent, immutable system to track products from origin to consumer with blockchain technology.",
+      author: {
+        id: "user_456",
+        name: "Taylor Smith",
+        avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80",
+      },
+      skills: ["Blockchain", "Backend Development", "Product Management"],
+      collaborators: 3,
+      likes: 18,
+      comments: 5,
+      createdAt: new Date().toISOString(),
     },
-    skills: ["Blockchain", "Backend Development", "Product Management"],
-    collaborators: 3,
-    likes: 18,
-    comments: 5,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "3",
-    title: "Virtual Coworking Space for Remote Teams",
-    description: "Creating a virtual environment that replicates the serendipitous interactions and collaborative atmosphere of physical offices for remote teams.",
-    author: {
-      id: "user_789",
-      name: "Morgan Lee",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80",
+    {
+      id: "3",
+      title: "Virtual Coworking Space for Remote Teams",
+      description: "Creating a virtual environment that replicates the serendipitous interactions and collaborative atmosphere of physical offices for remote teams.",
+      author: {
+        id: "user_789",
+        name: "Morgan Lee",
+        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80",
+      },
+      skills: ["Frontend Development", "UI/UX Design", "Marketing"],
+      collaborators: 3,
+      likes: 32,
+      comments: 12,
+      createdAt: new Date().toISOString(),
     },
-    skills: ["Frontend Development", "UI/UX Design", "Marketing"],
-    collaborators: 3,
-    likes: 32,
-    comments: 12,
-    createdAt: new Date().toISOString(),
-  },
-];
+  ];
+};
 
 export const useIdeas = () => {
   const { userId } = useAuth();
@@ -82,30 +90,30 @@ export const useIdeas = () => {
 
   // Load ideas on component mount
   useEffect(() => {
-    // Simulate API fetch
-    setTimeout(() => {
-      // Process ideas to add user-specific flags
-      const processedIdeas = mockIdeas.map(idea => ({
-        ...idea,
-        isOwner: idea.author.id === userId,
-        isSaved: getSavedIdeaIds().includes(idea.id),
-      }));
-      
-      setIdeas(processedIdeas);
-      
-      // Filter for user ideas
-      setUserIdeas(processedIdeas.filter(idea => idea.isOwner));
-      
-      // Get saved ideas from local storage
-      const savedIdeaIds = getSavedIdeaIds();
-      setSavedIdeas(processedIdeas.filter(idea => savedIdeaIds.includes(idea.id)));
-      
-      // Get collaborating ideas - in a real app this would come from an API
-      // For demo, just use a fixed one
-      setCollaboratingIdeas(processedIdeas.filter(idea => idea.id === "3"));
-      
-      setLoading(false);
-    }, 500);
+    // Get ideas from localStorage
+    const storedIdeas = getStoredIdeas();
+    
+    // Process ideas to add user-specific flags
+    const processedIdeas = storedIdeas.map(idea => ({
+      ...idea,
+      isOwner: idea.author.id === userId,
+      isSaved: getSavedIdeaIds().includes(idea.id),
+    }));
+    
+    setIdeas(processedIdeas);
+    
+    // Filter for user ideas
+    setUserIdeas(processedIdeas.filter(idea => idea.author.id === userId));
+    
+    // Get saved ideas from local storage
+    const savedIdeaIds = getSavedIdeaIds();
+    setSavedIdeas(processedIdeas.filter(idea => savedIdeaIds.includes(idea.id)));
+    
+    // Get collaborating ideas - in a real app this would come from an API
+    // For demo, just use a fixed one
+    setCollaboratingIdeas(processedIdeas.filter(idea => idea.id === "3"));
+    
+    setLoading(false);
   }, [userId]);
 
   // Save idea to user's saved list
@@ -169,6 +177,11 @@ export const useIdeas = () => {
     
     // In a real app, this would be an API call
     const updatedIdeas = [newIdea, ...ideas];
+    
+    // Store ideas in localStorage
+    localStorage.setItem('ideas', JSON.stringify(updatedIdeas));
+    
+    // Update states
     setIdeas(updatedIdeas);
     setUserIdeas([newIdea, ...userIdeas]);
     

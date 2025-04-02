@@ -22,6 +22,11 @@ const PostIdea = () => {
         title: "Idea Posted!",
         description: "Your idea has been successfully posted.",
       });
+      
+      // Add console log for debugging
+      console.log("New idea created:", newIdea);
+      console.log("Navigating to dashboard");
+      
       navigate("/dashboard");
     } else {
       toast({
