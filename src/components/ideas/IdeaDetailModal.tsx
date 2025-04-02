@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -23,7 +22,7 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(idea.likes);
   const [newComment, setNewComment] = useState("");
-  const { userName, userId } = useAuth();
+  const { userName, userId, isAuthenticated } = useAuth();
   const { addComment } = useIdeas();
   const [comments, setComments] = useState<Comment[]>(idea.comments || []);
 
@@ -44,9 +43,14 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
     }
   };
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
+    if (!isAuthenticated) {
+      toast.error("Please sign in to comment");
+      return;
+    }
+    
     if (newComment.trim()) {
-      // Create comment data with the required author property
+      // Create comment data with required author property
       const commentData = {
         text: newComment,
         ideaId: idea.id,
@@ -58,14 +62,11 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
       };
       
       // Add comment using the hook
-      const savedComment = addComment(commentData);
+      const savedComment = await addComment(commentData);
       
       if (savedComment) {
         // Update local state with the new comment
         setComments([...comments, savedComment]);
-        
-        // Show success toast
-        toast.success("Comment added successfully!");
         
         // Clear input
         setNewComment("");
@@ -100,7 +101,6 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
         </DialogHeader>
         
         <div className="space-y-5">
-          {/* Skills */}
           <div className="mt-4">
             <h4 className="text-sm font-medium mb-2">Skills needed:</h4>
             <div className="flex flex-wrap gap-2">
@@ -110,7 +110,6 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
             </div>
           </div>
           
-          {/* Current Collaborators */}
           <div>
             <h4 className="text-sm font-medium mb-2">Current collaborators:</h4>
             <div className="flex -space-x-2 overflow-hidden">
@@ -123,7 +122,6 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
             </div>
           </div>
           
-          {/* Comments Section */}
           <div>
             <h4 className="text-sm font-medium mb-2">Comments:</h4>
             {comments.length > 0 ? (
@@ -150,7 +148,6 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
               </div>
             )}
             
-            {/* Add comment form */}
             <div className="mt-4 flex gap-2">
               <Textarea 
                 placeholder="Add a comment..."
@@ -161,14 +158,13 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
               <Button 
                 onClick={handleAddComment} 
                 className="self-end"
-                disabled={!newComment.trim()}
+                disabled={!newComment.trim() || !isAuthenticated}
               >
                 <Send size={16} />
               </Button>
             </div>
           </div>
           
-          {/* Action buttons */}
           <div className="flex items-center justify-between pt-4 border-t">
             <div className="flex space-x-2">
               <Button 

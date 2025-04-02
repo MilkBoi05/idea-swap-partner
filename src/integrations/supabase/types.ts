@@ -9,6 +9,159 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      collaborators: {
+        Row: {
+          created_at: string
+          id: string
+          idea_id: string
+          role: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          idea_id: string
+          role?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          idea_id?: string
+          role?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaborators_idea_id_fkey"
+            columns: ["idea_id"]
+            isOneToOne: false
+            referencedRelation: "ideas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comments: {
+        Row: {
+          author_id: string
+          created_at: string
+          id: string
+          idea_id: string
+          text: string
+        }
+        Insert: {
+          author_id: string
+          created_at?: string
+          id?: string
+          idea_id: string
+          text: string
+        }
+        Update: {
+          author_id?: string
+          created_at?: string
+          id?: string
+          idea_id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_idea_id_fkey"
+            columns: ["idea_id"]
+            isOneToOne: false
+            referencedRelation: "ideas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ideas: {
+        Row: {
+          author_id: string
+          cover_image: string | null
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          likes: number
+          skills: string[]
+          title: string
+        }
+        Insert: {
+          author_id: string
+          cover_image?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          is_active?: boolean
+          likes?: number
+          skills?: string[]
+          title: string
+        }
+        Update: {
+          author_id?: string
+          cover_image?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          likes?: number
+          skills?: string[]
+          title?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar: string | null
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          avatar?: string | null
+          created_at?: string
+          id: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          avatar?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      saved_ideas: {
+        Row: {
+          created_at: string
+          id: string
+          idea_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          idea_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          idea_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_ideas_idea_id_fkey"
+            columns: ["idea_id"]
+            isOneToOne: false
+            referencedRelation: "ideas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       test: {
         Row: {
           created_at: string
