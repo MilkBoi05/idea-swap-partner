@@ -1,5 +1,6 @@
 
 import { useUser } from "@clerk/clerk-react";
+import { uploadProfileImage } from "./storageService";
 
 // Types for user profile
 export type UserProfile = {
@@ -48,14 +49,24 @@ export const useUserProfile = () => {
     };
   };
 
-  const updateUserProfile = (profile: Partial<UserProfile>) => {
+  const updateUserProfile = async (profile: Partial<UserProfile>, profilePicture?: File | null) => {
     if (!user) return null;
     
     const currentProfile = getUserProfile();
-    const updatedProfile = {
+    let updatedProfile = {
       ...currentProfile,
       ...profile,
     };
+    
+    // If a new profile picture was provided, upload it to Supabase storage
+    if (profilePicture) {
+      try {
+        const profileImageUrl = await uploadProfileImage(user.id, profilePicture);
+        updatedProfile.profileImage = profileImageUrl;
+      } catch (error) {
+        console.error("Failed to upload profile image:", error);
+      }
+    }
     
     // In a real app, this would be an API call
     localStorage.setItem(`user_profile_${user.id}`, JSON.stringify(updatedProfile));

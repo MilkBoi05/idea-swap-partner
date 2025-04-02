@@ -4,31 +4,64 @@ import Navbar from "@/components/layout/Navbar";
 import IdeaForm from "@/components/ideas/IdeaForm";
 import { useIdeas } from "@/hooks/useIdeas";
 import { useToast } from "@/hooks/use-toast";
+import { uploadIdeaImage } from "@/services/storageService";
 
 const PostIdea = () => {
   const { createIdea } = useIdeas();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleSubmitIdea = (formData: { title: string; description: string; skills: string[] }) => {
-    const newIdea = createIdea({
-      title: formData.title,
-      description: formData.description,
-      skills: formData.skills,
-    });
+  const handleSubmitIdea = async (formData: { 
+    title: string; 
+    description: string; 
+    skills: string[]; 
+    coverImage?: File | null 
+  }) => {
+    try {
+      // Create the idea first
+      const newIdea = createIdea({
+        title: formData.title,
+        description: formData.description,
+        skills: formData.skills,
+      });
+      
+      if (!newIdea) {
+        throw new Error("Failed to create idea");
+      }
+      
+      // If there's a cover image, upload it to Supabase storage
+      let coverImageUrl = undefined;
+      if (formData.coverImage) {
+        try {
+          coverImageUrl = await uploadIdeaImage(newIdea.id, formData.coverImage);
+          
+          // Update the idea with the cover image URL
+          newIdea.coverImage = coverImageUrl;
+          
+          // Update the idea in the store
+          // In a production app, this would be done as part of the API call
+          const storedIdeas = JSON.parse(localStorage.getItem('ideas') || '[]');
+          const updatedIdeas = storedIdeas.map((idea: any) => 
+            idea.id === newIdea.id ? { ...idea, coverImage: coverImageUrl } : idea
+          );
+          localStorage.setItem('ideas', JSON.stringify(updatedIdeas));
+        } catch (error) {
+          console.error("Error uploading cover image:", error);
+          // Don't fail the entire operation if image upload fails
+        }
+      }
 
-    if (newIdea) {
       toast({
         title: "Idea Posted!",
         description: "Your idea has been successfully posted.",
       });
       
-      // Add console log for debugging
       console.log("New idea created:", newIdea);
       console.log("Navigating to dashboard");
       
       navigate("/dashboard");
-    } else {
+    } catch (error) {
+      console.error("Error creating idea:", error);
       toast({
         title: "Error",
         description: "Failed to post your idea. Please try again.",

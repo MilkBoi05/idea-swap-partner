@@ -16,11 +16,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import SkillTag from "../skills/SkillTag";
+import { UploadCloud } from "lucide-react";
 
 const ideaSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters").max(100),
   description: z.string().min(20, "Description must be at least 20 characters"),
   skills: z.array(z.string()).min(1, "Select at least one required skill"),
+  coverImage: z.any().optional(), // Optional cover image
 });
 
 type IdeaFormValues = z.infer<typeof ideaSchema>;
@@ -49,6 +51,8 @@ const commonSkills = [
 const IdeaForm = ({ onSubmit }: IdeaFormProps) => {
   const { toast } = useToast();
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [coverImage, setCoverImage] = useState<File | null>(null);
+  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
 
   const form = useForm<IdeaFormValues>({
     resolver: zodResolver(ideaSchema),
@@ -64,6 +68,10 @@ const IdeaForm = ({ onSubmit }: IdeaFormProps) => {
   useEffect(() => {
     form.setValue("skills", selectedSkills);
   }, [selectedSkills, form]);
+  
+  useEffect(() => {
+    form.setValue("coverImage", coverImage);
+  }, [coverImage, form]);
 
   const toggleSkill = (skill: string) => {
     setSelectedSkills((prev) => {
@@ -73,10 +81,27 @@ const IdeaForm = ({ onSubmit }: IdeaFormProps) => {
         : [...prev, skill];
     });
   };
+  
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setCoverImage(file);
+      setCoverImagePreview(URL.createObjectURL(file));
+    }
+  };
+  
+  const removeImage = () => {
+    setCoverImage(null);
+    setCoverImagePreview(null);
+    form.setValue("coverImage", null);
+  };
 
   const handleSubmit = (data: IdeaFormValues) => {
     if (onSubmit) {
-      onSubmit(data);
+      onSubmit({
+        ...data,
+        coverImage: coverImage
+      });
     } else {
       toast({
         title: "Idea Posted!",
@@ -115,6 +140,52 @@ const IdeaForm = ({ onSubmit }: IdeaFormProps) => {
                   className="min-h-32"
                   {...field} 
                 />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        {/* Cover Image Upload */}
+        <FormField
+          control={form.control}
+          name="coverImage"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Cover Image (Optional)</FormLabel>
+              <FormControl>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                  {coverImagePreview ? (
+                    <div className="relative">
+                      <img 
+                        src={coverImagePreview} 
+                        alt="Cover preview" 
+                        className="w-full h-48 object-cover rounded-md" 
+                      />
+                      <Button 
+                        type="button"
+                        variant="destructive" 
+                        size="sm" 
+                        className="absolute top-2 right-2"
+                        onClick={removeImage}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-6">
+                      <UploadCloud className="h-10 w-10 text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-500 mb-4">Upload a cover image for your idea</p>
+                      <Input
+                        id="image-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="max-w-xs"
+                      />
+                    </div>
+                  )}
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>

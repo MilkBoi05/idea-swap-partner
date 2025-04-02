@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,7 @@ import SkillTag from "@/components/skills/SkillTag";
 import { ArrowRight, CheckCircle, UploadCloud } from "lucide-react";
 import Logo from "@/components/branding/Logo";
 import { useUserProfile } from "@/services/userService";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@clerk/clerk-react";
 
 const allSkills = [
@@ -66,29 +65,35 @@ const Onboarding = () => {
     }
   };
   
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     if (step < 4) {
       setStep(step + 1);
     } else {
-      // Save user profile data
-      updateUserProfile({
-        name: formData.name,
-        title: formData.title,
-        bio: formData.bio,
-        skills: formData.selectedSkills,
-        location: formData.location,
-      });
+      try {
+        await updateUserProfile({
+          name: formData.name,
+          title: formData.title,
+          bio: formData.bio,
+          skills: formData.selectedSkills,
+          location: formData.location,
+        }, formData.profilePicture);
 
-      // Mark onboarding as complete
-      completeOnboarding();
-      
-      toast({
-        title: "Profile completed!",
-        description: "Your profile has been set up successfully.",
-      });
-      
-      // Redirect to the dashboard
-      navigate("/dashboard");
+        completeOnboarding();
+        
+        toast({
+          title: "Profile completed!",
+          description: "Your profile has been set up successfully.",
+        });
+        
+        navigate("/dashboard");
+      } catch (error) {
+        console.error("Error saving profile:", error);
+        toast({
+          title: "Error",
+          description: "There was an error saving your profile. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
   

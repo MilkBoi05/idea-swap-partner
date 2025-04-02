@@ -19,6 +19,7 @@ export type Idea = {
   likes: number;
   comments: number;
   createdAt: string;
+  coverImage?: string;
   isSaved?: boolean;
   isOwner?: boolean;
 };
@@ -154,7 +155,7 @@ export const useIdeas = () => {
   };
 
   // Create a new idea
-  const createIdea = (idea: Omit<Idea, 'id' | 'author' | 'collaborators' | 'likes' | 'comments' | 'createdAt' | 'isOwner' | 'isSaved'>) => {
+  const createIdea = (idea: Omit<Idea, 'id' | 'author' | 'collaborators' | 'likes' | 'comments' | 'createdAt' | 'isOwner' | 'isSaved' | 'coverImage'>) => {
     if (!userId) return null;
     
     const newIdea: Idea = {
