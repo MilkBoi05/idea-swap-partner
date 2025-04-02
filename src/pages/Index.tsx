@@ -14,7 +14,7 @@ const featuredIdeas: Idea[] = [
     title: "AI-Powered Recipe Generator for Dietary Restrictions",
     description: "An app that creates personalized recipe recommendations based on dietary restrictions, allergies, and ingredient availability using AI.",
     author: {
-      id: "user_1", // Added id property
+      id: "user_1",
       name: "Alex Johnson",
       avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80",
     },
@@ -22,13 +22,14 @@ const featuredIdeas: Idea[] = [
     collaborators: 2,
     likes: 24,
     comments: 8,
+    createdAt: new Date().toISOString(), // Added createdAt property
   },
   {
     id: "2",
     title: "Blockchain Solution for Supply Chain Verification",
     description: "A transparent, immutable system to track products from origin to consumer with blockchain technology.",
     author: {
-      id: "user_2", // Added id property
+      id: "user_2",
       name: "Jamie Smith",
       avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80",
     },
@@ -36,13 +37,14 @@ const featuredIdeas: Idea[] = [
     collaborators: 3,
     likes: 18,
     comments: 5,
+    createdAt: new Date().toISOString(), // Added createdAt property
   },
   {
     id: "3",
     title: "Virtual Coworking Space for Remote Teams",
     description: "Creating a virtual environment that replicates the serendipitous interactions and collaborative atmosphere of physical offices for remote teams.",
     author: {
-      id: "user_3", // Added id property
+      id: "user_3",
       name: "Morgan Lee",
       avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80",
     },
@@ -50,6 +52,7 @@ const featuredIdeas: Idea[] = [
     collaborators: 1,
     likes: 32,
     comments: 12,
+    createdAt: new Date().toISOString(), // Added createdAt property
   },
 ];
 

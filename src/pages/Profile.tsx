@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import SkillTag from "@/components/skills/SkillTag";
 import IdeaCard from "@/components/ideas/IdeaCard";
-import { Idea } from "@/hooks/useIdeas"; // Corrected import
+import { Idea } from "@/hooks/useIdeas";
 import { Edit3, UploadCloud } from "lucide-react";
 
 const mockIdeas: Idea[] = [
@@ -19,7 +18,7 @@ const mockIdeas: Idea[] = [
     title: "AI-Powered Recipe Generator for Dietary Restrictions",
     description: "An app that creates personalized recipe recommendations based on dietary restrictions, allergies, and ingredient availability using AI.",
     author: {
-      id: "user_1", // Added id property
+      id: "user_1",
       name: "Alex Johnson",
       avatar: "/placeholder.svg",
     },
@@ -27,13 +26,14 @@ const mockIdeas: Idea[] = [
     collaborators: 2,
     likes: 24,
     comments: 8,
+    createdAt: new Date().toISOString(),
   },
   {
     id: "2",
     title: "Blockchain Solution for Supply Chain Verification",
     description: "A transparent, immutable system to track products from origin to consumer with blockchain technology.",
     author: {
-      id: "user_2", // Added id property
+      id: "user_2",
       name: "Alex Johnson",
       avatar: "/placeholder.svg",
     },
@@ -41,6 +41,7 @@ const mockIdeas: Idea[] = [
     collaborators: 3,
     likes: 18,
     comments: 5,
+    createdAt: new Date().toISOString(),
   },
 ];
 
@@ -50,7 +51,7 @@ const collaboratingIdeas: Idea[] = [
     title: "Virtual Coworking Space for Remote Teams",
     description: "Creating a virtual environment that replicates the serendipitous interactions and collaborative atmosphere of physical offices for remote teams.",
     author: {
-      id: "user_3", // Added id property
+      id: "user_3",
       name: "Morgan Lee",
       avatar: "/placeholder.svg",
     },
@@ -58,6 +59,7 @@ const collaboratingIdeas: Idea[] = [
     collaborators: 3,
     likes: 32,
     comments: 12,
+    createdAt: new Date().toISOString(),
   },
 ];
 
@@ -100,7 +102,6 @@ const Profile = () => {
   };
   
   const handleSaveProfile = () => {
-    // In a real app, this would send the updated profile to a backend
     console.log("Saving profile:", profileForm, selectedSkills);
     setEditMode(false);
   };
