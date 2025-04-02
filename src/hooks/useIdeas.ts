@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Define the types for our idea data
 export type IdeaAuthor = {
@@ -140,7 +140,8 @@ export const useIdeas = () => {
       );
       
       setIdeas(updatedIdeas);
-      setSavedIdeas(savedIds.filter(idea => newSavedIds.includes(idea.id)));
+      // Fix: Filter the updated ideas to get only the saved ones
+      setSavedIdeas(updatedIdeas.filter(idea => newSavedIds.includes(idea.id)));
     }
   };
 
