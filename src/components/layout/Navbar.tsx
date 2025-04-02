@@ -2,16 +2,17 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, MessageSquare, LayoutDashboard, User } from "lucide-react";
+import Logo from "@/components/branding/Logo";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
 
   const navItems = [
-    { name: "Home", path: "/" },
-    { name: "Browse Ideas", path: "/browse" },
-    { name: "Dashboard", path: "/dashboard" },
+    { name: "Browse Ideas", path: "/browse", icon: <LayoutDashboard className="w-4 h-4" /> },
+    { name: "Messages", path: "/messages", icon: <MessageSquare className="w-4 h-4" /> },
+    { name: "Profile", path: "/profile", icon: <User className="w-4 h-4" /> },
     { name: "Post Idea", path: "/post-idea" },
   ];
 
@@ -22,9 +23,7 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link to="/" className="flex-shrink-0 flex items-center">
-              <span className="text-xl font-bold text-primary">IdeaSwap</span>
-            </Link>
+            <Logo />
           </div>
           
           {/* Desktop Navigation */}
@@ -34,12 +33,13 @@ const Navbar = () => {
                 <Link
                   key={item.name}
                   to={item.path}
-                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                  className={`px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1 ${
                     location.pathname === item.path
                       ? "text-primary"
                       : "text-gray-600 hover:text-primary"
                   }`}
                 >
+                  {item.icon && item.icon}
                   {item.name}
                 </Link>
               ))}
@@ -72,13 +72,14 @@ const Navbar = () => {
               <Link
                 key={item.name}
                 to={item.path}
-                className={`block px-3 py-2 rounded-md text-base font-medium ${
+                className={`block px-3 py-2 rounded-md text-base font-medium flex items-center gap-2 ${
                   location.pathname === item.path
                     ? "text-primary"
                     : "text-gray-600 hover:text-primary"
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
+                {item.icon && item.icon}
                 {item.name}
               </Link>
             ))}

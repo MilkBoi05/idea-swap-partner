@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, Rocket } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import IdeaCard, { Idea } from "@/components/ideas/IdeaCard";
 
@@ -56,10 +56,22 @@ const Index = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      {/* Hero Section */}
-      <div className="hero-gradient text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Hero Section with Image */}
+      <div className="hero-gradient text-white relative overflow-hidden">
+        <div className="absolute inset-0 z-0 opacity-20">
+          <img 
+            src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=2000&q=80" 
+            alt="Hero background" 
+            className="w-full h-full object-cover"
+          />
+        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
           <div className="text-center">
+            <div className="flex justify-center mb-6">
+              <div className="flex items-center justify-center bg-white/20 backdrop-blur-sm text-white rounded-full p-4">
+                <Rocket className="h-12 w-12" />
+              </div>
+            </div>
             <h1 className="text-4xl font-extrabold sm:text-5xl md:text-6xl mb-6">
               Connect Ideas with Talent
             </h1>
