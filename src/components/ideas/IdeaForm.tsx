@@ -25,6 +25,10 @@ const ideaSchema = z.object({
 
 type IdeaFormValues = z.infer<typeof ideaSchema>;
 
+interface IdeaFormProps {
+  onSubmit?: (data: IdeaFormValues) => void;
+}
+
 // Common skills for the demo
 const commonSkills = [
   "Frontend Development",
@@ -42,7 +46,7 @@ const commonSkills = [
   "Legal",
 ];
 
-const IdeaForm = () => {
+const IdeaForm = ({ onSubmit }: IdeaFormProps) => {
   const { toast } = useToast();
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
 
@@ -67,18 +71,21 @@ const IdeaForm = () => {
     });
   };
 
-  const onSubmit = (data: IdeaFormValues) => {
-    toast({
-      title: "Idea Posted!",
-      description: "Your idea has been successfully posted.",
-    });
-    console.log("Form submitted:", data);
-    // In a real app, we would send this to an API
+  const handleSubmit = (data: IdeaFormValues) => {
+    if (onSubmit) {
+      onSubmit(data);
+    } else {
+      toast({
+        title: "Idea Posted!",
+        description: "Your idea has been successfully posted.",
+      });
+      console.log("Form submitted:", data);
+    }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="title"

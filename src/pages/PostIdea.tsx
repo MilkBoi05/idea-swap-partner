@@ -1,8 +1,37 @@
 
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import IdeaForm from "@/components/ideas/IdeaForm";
+import { useIdeas } from "@/hooks/useIdeas";
+import { useToast } from "@/hooks/use-toast";
 
 const PostIdea = () => {
+  const { createIdea } = useIdeas();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const handleSubmitIdea = (formData: { title: string; description: string; skills: string[] }) => {
+    const newIdea = createIdea({
+      title: formData.title,
+      description: formData.description,
+      skills: formData.skills,
+    });
+
+    if (newIdea) {
+      toast({
+        title: "Idea Posted!",
+        description: "Your idea has been successfully posted.",
+      });
+      navigate("/dashboard");
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to post your idea. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -13,7 +42,7 @@ const PostIdea = () => {
           Share your startup idea and find skilled collaborators to help bring it to life.
         </p>
         
-        <IdeaForm />
+        <IdeaForm onSubmit={handleSubmitIdea} />
       </div>
     </div>
   );
