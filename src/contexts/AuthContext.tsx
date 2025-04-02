@@ -15,35 +15,26 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Check if Clerk is initialized
-const isClerkInitialized = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
 
-  // Only use Clerk hooks if Clerk is initialized
-  const clerkAuth = isClerkInitialized ? useClerkAuth() : { isSignedIn: false, isLoaded: true, signOut: async () => {} };
-  const clerkUser = isClerkInitialized ? useUser() : { user: null };
-  
-  const { isSignedIn, isLoaded, signOut } = clerkAuth;
-  const { user } = clerkUser;
+  const { isSignedIn, isLoaded, signOut } = useClerkAuth();
+  const { user } = useUser();
 
   useEffect(() => {
-    if (isLoaded || !isClerkInitialized) {
+    if (isLoaded) {
       setIsLoading(false);
     }
   }, [isLoaded]);
 
   const handleSignOut = async () => {
-    if (isClerkInitialized) {
-      await signOut();
-    }
+    await signOut();
     navigate("/");
   };
 
   const value = {
-    isAuthenticated: !!isSignedIn && isClerkInitialized,
+    isAuthenticated: !!isSignedIn,
     isLoading,
     userId: user?.id || null,
     userName: user?.fullName || user?.username || null,
