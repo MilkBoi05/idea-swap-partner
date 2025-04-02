@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Users, Calendar, Star } from "lucide-react";
+import { MessageSquare, Users, Star, Send } from "lucide-react";
 import SkillTag from "@/components/skills/SkillTag";
-import { Idea } from "@/hooks/useIdeas";
+import { Idea, Comment } from "@/hooks/useIdeas";
 import { format } from "date-fns";
+import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/contexts/AuthContext";
 
 type IdeaDetailModalProps = {
   idea: Idea;
@@ -19,6 +21,8 @@ type IdeaDetailModalProps = {
 const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailModalProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(idea.likes);
+  const [newComment, setNewComment] = useState("");
+  const { userName, userId } = useAuth();
 
   const toggleLike = () => {
     if (isLiked) {
@@ -34,6 +38,34 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
       return format(new Date(dateString), "MMM d, yyyy");
     } catch {
       return "Unknown date";
+    }
+  };
+
+  const handleAddComment = () => {
+    if (newComment.trim()) {
+      // In a real app, this would call an API to add the comment
+      // For now, we'll just add it to localStorage through the useIdeas hook
+      const commentData: Comment = {
+        id: `comment_${Date.now()}`,
+        author: {
+          id: userId || 'anonymous',
+          name: userName || 'Anonymous User',
+          avatar: "/placeholder.svg"
+        },
+        text: newComment,
+        createdAt: new Date().toISOString(),
+        ideaId: idea.id
+      };
+      
+      // This is where we would call a function to add the comment
+      // For now, we'll log it
+      console.log("Adding comment:", commentData);
+      
+      // Clear input
+      setNewComment("");
+      
+      // Close modal to refresh data (in a real app, we'd update state)
+      onClose();
     }
   };
 
@@ -54,7 +86,7 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
             </div>
             <Badge variant="outline" className="flex items-center">
               <Users size={14} className="mr-1" />
-              <span>{idea.collaborators} collaborator{idea.collaborators !== 1 ? "s" : ""}</span>
+              <span>{idea.collaborators.length} collaborator{idea.collaborators.length !== 1 ? "s" : ""}</span>
             </Badge>
           </div>
           <DialogTitle className="text-2xl">{idea.title}</DialogTitle>
@@ -78,23 +110,57 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
           <div>
             <h4 className="text-sm font-medium mb-2">Current collaborators:</h4>
             <div className="flex -space-x-2 overflow-hidden">
-              {[...Array(idea.collaborators || 0)].map((_, i) => (
+              {idea.collaborators.map((collaborator, i) => (
                 <Avatar key={i} className="border-2 border-background">
-                  <AvatarImage src={`/placeholder.svg`} />
-                  <AvatarFallback>C{i+1}</AvatarFallback>
+                  <AvatarImage src={collaborator.avatar || `/placeholder.svg`} />
+                  <AvatarFallback>{collaborator.name.charAt(0)}</AvatarFallback>
                 </Avatar>
               ))}
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted text-xs font-medium">
-                +
-              </div>
             </div>
           </div>
           
-          {/* Comments Section Placeholder */}
+          {/* Comments Section */}
           <div>
-            <h4 className="text-sm font-medium mb-2">Recent comments:</h4>
-            <div className="bg-muted/50 p-4 rounded-md">
-              <p className="text-sm text-muted-foreground">No comments yet. Be the first to comment!</p>
+            <h4 className="text-sm font-medium mb-2">Comments:</h4>
+            {idea.comments.length > 0 ? (
+              <div className="space-y-3 max-h-60 overflow-y-auto">
+                {idea.comments.map((comment) => (
+                  <div key={comment.id} className="bg-muted/50 p-3 rounded-md">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={comment.author.avatar} />
+                        <AvatarFallback>{comment.author.name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm font-medium">{comment.author.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {formatDate(comment.createdAt)}
+                      </span>
+                    </div>
+                    <p className="text-sm">{comment.text}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-muted/50 p-4 rounded-md">
+                <p className="text-sm text-muted-foreground">No comments yet. Be the first to comment!</p>
+              </div>
+            )}
+            
+            {/* Add comment form */}
+            <div className="mt-4 flex gap-2">
+              <Textarea 
+                placeholder="Add a comment..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                className="min-h-[60px]"
+              />
+              <Button 
+                onClick={handleAddComment} 
+                className="self-end"
+                disabled={!newComment.trim()}
+              >
+                <Send size={16} />
+              </Button>
             </div>
           </div>
           
@@ -112,7 +178,7 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
               </Button>
               <Button variant="ghost" size="sm" className="flex items-center gap-1">
                 <MessageSquare size={16} />
-                <span>{idea.comments}</span>
+                <span>{idea.comments.length}</span>
               </Button>
             </div>
             <div className="flex gap-2">

@@ -34,7 +34,7 @@ const IdeaCard = ({ idea }: IdeaCardProps) => {
   return (
     <>
       <Card 
-        className="card-hover cursor-pointer" 
+        className="card-hover cursor-pointer h-full flex flex-col" 
         onClick={() => setShowDetailModal(true)}
       >
         <CardHeader className="pb-2">
@@ -55,7 +55,7 @@ const IdeaCard = ({ idea }: IdeaCardProps) => {
             {idea.description}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-grow mt-4">
           <div className="flex flex-wrap gap-1 mt-2">
             {idea.skills.map((skill, index) => (
               <SkillTag key={index} name={skill} />
@@ -66,14 +66,14 @@ const IdeaCard = ({ idea }: IdeaCardProps) => {
           <div className="flex space-x-4 text-gray-500 text-sm">
             <div className="flex items-center">
               <Users size={16} className="mr-1" />
-              <span>{idea.collaborators}</span>
+              <span>{idea.collaborators.length}</span>
             </div>
             <div className="flex items-center">
               <MessageCircle size={16} className="mr-1" />
-              <span>{idea.comments}</span>
+              <span>{idea.comments.length}</span>
             </div>
           </div>
-          <div className="flex space-x-2">
+          <div>
             <Button 
               variant="ghost" 
               size="sm" 
@@ -85,12 +85,6 @@ const IdeaCard = ({ idea }: IdeaCardProps) => {
                 className={isLiked ? "fill-yellow-400 text-yellow-400" : ""} 
               />
               <span>{likeCount}</span>
-            </Button>
-            <Button size="sm" onClick={(e) => {
-              e.stopPropagation();
-              console.log("Connect button clicked");
-            }}>
-              Connect
             </Button>
           </div>
         </CardFooter>
