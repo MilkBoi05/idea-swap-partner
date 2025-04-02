@@ -4,17 +4,22 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, MessageSquare, LayoutDashboard, User } from "lucide-react";
 import Logo from "@/components/branding/Logo";
+import { SignInButton, SignUpButton, UserButton, useAuth } from "@clerk/clerk-react";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const { isSignedIn } = useAuth();
 
   const navItems = [
     { name: "Browse Ideas", path: "/browse", icon: <LayoutDashboard className="w-4 h-4" /> },
-    { name: "Messages", path: "/messages", icon: <MessageSquare className="w-4 h-4" /> },
-    { name: "Profile", path: "/profile", icon: <User className="w-4 h-4" /> },
-    { name: "Post Idea", path: "/post-idea" },
+    { name: "Messages", path: "/messages", icon: <MessageSquare className="w-4 h-4" />, protected: true },
+    { name: "Profile", path: "/profile", icon: <User className="w-4 h-4" />, protected: true },
+    { name: "Post Idea", path: "/post-idea", protected: true },
   ];
+
+  // Filter nav items based on auth status
+  const filteredNavItems = navItems.filter(item => !item.protected || isSignedIn);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
@@ -29,7 +34,7 @@ const Navbar = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
             <div className="flex space-x-4">
-              {navItems.map((item) => (
+              {filteredNavItems.map((item) => (
                 <Link
                   key={item.name}
                   to={item.path}
@@ -45,10 +50,27 @@ const Navbar = () => {
               ))}
             </div>
             <div className="flex items-center space-x-2">
-              <Button variant="ghost" className="text-gray-600 hover:text-primary">
-                Sign In
-              </Button>
-              <Button>Sign Up</Button>
+              {isSignedIn ? (
+                <UserButton 
+                  afterSignOutUrl="/"
+                  appearance={{
+                    elements: {
+                      userButtonAvatarBox: "w-9 h-9"
+                    }
+                  }}
+                />
+              ) : (
+                <>
+                  <SignInButton mode="modal">
+                    <Button variant="ghost" className="text-gray-600 hover:text-primary">
+                      Sign In
+                    </Button>
+                  </SignInButton>
+                  <SignUpButton mode="modal">
+                    <Button>Sign Up</Button>
+                  </SignUpButton>
+                </>
+              )}
             </div>
           </div>
 
@@ -68,7 +90,7 @@ const Navbar = () => {
       {isMenuOpen && (
         <div className="md:hidden bg-white shadow-lg rounded-b-lg">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            {navItems.map((item) => (
+            {filteredNavItems.map((item) => (
               <Link
                 key={item.name}
                 to={item.path}
@@ -86,8 +108,27 @@ const Navbar = () => {
           </div>
           <div className="pt-4 pb-3 border-t border-gray-200">
             <div className="px-4 flex items-center justify-center space-x-2">
-              <Button variant="ghost" className="w-full">Sign In</Button>
-              <Button className="w-full">Sign Up</Button>
+              {isSignedIn ? (
+                <div className="flex justify-center w-full py-2">
+                  <UserButton 
+                    afterSignOutUrl="/"
+                    appearance={{
+                      elements: {
+                        userButtonAvatarBox: "w-9 h-9"
+                      }
+                    }}
+                  />
+                </div>
+              ) : (
+                <>
+                  <SignInButton mode="modal">
+                    <Button variant="ghost" className="w-full">Sign In</Button>
+                  </SignInButton>
+                  <SignUpButton mode="modal">
+                    <Button className="w-full">Sign Up</Button>
+                  </SignUpButton>
+                </>
+              )}
             </div>
           </div>
         </div>
