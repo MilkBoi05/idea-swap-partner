@@ -1,4 +1,3 @@
-
 import { useUser } from "@clerk/clerk-react";
 import { uploadProfileImage } from "./storageService";
 
@@ -62,9 +61,14 @@ export const useUserProfile = () => {
     if (profilePicture) {
       try {
         const profileImageUrl = await uploadProfileImage(user.id, profilePicture);
-        updatedProfile.profileImage = profileImageUrl;
+        if (profileImageUrl) {
+          updatedProfile.profileImage = profileImageUrl;
+        } else {
+          console.warn("Profile image upload failed, using existing image");
+        }
       } catch (error) {
         console.error("Failed to upload profile image:", error);
+        // Continue with the update but keep the existing profile image
       }
     }
     

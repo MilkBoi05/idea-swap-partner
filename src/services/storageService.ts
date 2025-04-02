@@ -5,7 +5,14 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+// Check if the environment variables are properly set
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Missing Supabase URL or Anonymous Key. Please check your environment variables.');
+}
+
+export const supabase = supabaseUrl && supabaseKey 
+  ? createClient(supabaseUrl, supabaseKey)
+  : null;
 
 // Storage bucket names
 const BUCKETS = {
@@ -16,6 +23,11 @@ const BUCKETS = {
 
 // Initialize storage buckets - this should be called once when the app starts
 export const initializeStorage = async () => {
+  if (!supabase) {
+    console.error('Supabase client not initialized. Storage operations will not work.');
+    return;
+  }
+  
   try {
     // Create profile images bucket
     const { error: profileError } = await supabase.storage.createBucket(
@@ -52,6 +64,11 @@ export const initializeStorage = async () => {
 
 // Function to upload a profile image
 export const uploadProfileImage = async (userId: string, file: File) => {
+  if (!supabase) {
+    console.error('Supabase client not initialized. Cannot upload profile image.');
+    return null;
+  }
+  
   try {
     const fileExt = file.name.split('.').pop();
     const filePath = `${userId}/profile.${fileExt}`;
@@ -80,6 +97,11 @@ export const uploadProfileImage = async (userId: string, file: File) => {
 
 // Function to upload an idea image
 export const uploadIdeaImage = async (ideaId: string, file: File) => {
+  if (!supabase) {
+    console.error('Supabase client not initialized. Cannot upload idea image.');
+    return null;
+  }
+  
   try {
     const fileExt = file.name.split('.').pop();
     const filePath = `${ideaId}/${Date.now()}.${fileExt}`;
@@ -108,6 +130,11 @@ export const uploadIdeaImage = async (ideaId: string, file: File) => {
 
 // Function to upload an attachment for a task or comment
 export const uploadAttachment = async (userId: string, file: File, type: 'task' | 'comment', itemId: string) => {
+  if (!supabase) {
+    console.error('Supabase client not initialized. Cannot upload attachment.');
+    return null;
+  }
+  
   try {
     const fileExt = file.name.split('.').pop();
     const fileName = file.name.split('.')[0];
@@ -145,6 +172,11 @@ export const uploadAttachment = async (userId: string, file: File, type: 'task' 
 
 // Function to get a file by path
 export const getFileUrl = async (bucket: string, filePath: string) => {
+  if (!supabase) {
+    console.error('Supabase client not initialized. Cannot get file URL.');
+    return null;
+  }
+  
   try {
     if (bucket === BUCKETS.PROFILES || bucket === BUCKETS.IDEAS) {
       // Public buckets - return public URL
@@ -170,6 +202,11 @@ export const getFileUrl = async (bucket: string, filePath: string) => {
 
 // Function to delete a file
 export const deleteFile = async (bucket: string, filePath: string) => {
+  if (!supabase) {
+    console.error('Supabase client not initialized. Cannot delete file.');
+    return false;
+  }
+  
   try {
     const { error } = await supabase.storage.from(bucket).remove([filePath]);
     

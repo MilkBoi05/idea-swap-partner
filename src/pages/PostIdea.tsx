@@ -35,16 +35,20 @@ const PostIdea = () => {
         try {
           coverImageUrl = await uploadIdeaImage(newIdea.id, formData.coverImage);
           
-          // Update the idea with the cover image URL
-          newIdea.coverImage = coverImageUrl;
-          
-          // Update the idea in the store
-          // In a production app, this would be done as part of the API call
-          const storedIdeas = JSON.parse(localStorage.getItem('ideas') || '[]');
-          const updatedIdeas = storedIdeas.map((idea: any) => 
-            idea.id === newIdea.id ? { ...idea, coverImage: coverImageUrl } : idea
-          );
-          localStorage.setItem('ideas', JSON.stringify(updatedIdeas));
+          if (coverImageUrl) {
+            // Update the idea with the cover image URL
+            newIdea.coverImage = coverImageUrl;
+            
+            // Update the idea in the store
+            // In a production app, this would be done as part of the API call
+            const storedIdeas = JSON.parse(localStorage.getItem('ideas') || '[]');
+            const updatedIdeas = storedIdeas.map((idea: any) => 
+              idea.id === newIdea.id ? { ...idea, coverImage: coverImageUrl } : idea
+            );
+            localStorage.setItem('ideas', JSON.stringify(updatedIdeas));
+          } else {
+            console.warn('Cover image URL not returned from storage service');
+          }
         } catch (error) {
           console.error("Error uploading cover image:", error);
           // Don't fail the entire operation if image upload fails
