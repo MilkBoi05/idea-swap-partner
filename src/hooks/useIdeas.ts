@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -53,7 +54,18 @@ const getStoredComments = (): Comment[] => {
 const getStoredIdeas = (): Idea[] => {
   const storedIdeas = localStorage.getItem('ideas');
   if (storedIdeas) {
-    return JSON.parse(storedIdeas);
+    try {
+      const parsedIdeas = JSON.parse(storedIdeas);
+      
+      // Ensure all ideas have collaborators as arrays
+      return parsedIdeas.map((idea: any) => ({
+        ...idea,
+        collaborators: Array.isArray(idea.collaborators) ? idea.collaborators : [],
+        comments: Array.isArray(idea.comments) ? idea.comments : []
+      }));
+    } catch (error) {
+      console.error("Error parsing stored ideas:", error);
+    }
   }
   
   // Default collaborators
@@ -191,33 +203,42 @@ export const useIdeas = () => {
 
   // Load ideas on component mount
   useEffect(() => {
-    // Get ideas from localStorage
-    const storedIdeas = getStoredIdeas();
-    const storedComments = getStoredComments();
-    
-    // Process ideas to add user-specific flags and ensure comments are up to date
-    const processedIdeas = storedIdeas.map(idea => ({
-      ...idea,
-      isOwner: idea.author.id === userId,
-      isSaved: getSavedIdeaIds().includes(idea.id),
-      comments: storedComments.filter(comment => comment.ideaId === idea.id),
-    }));
-    
-    setIdeas(processedIdeas);
-    
-    // Filter for user ideas
-    setUserIdeas(processedIdeas.filter(idea => idea.author.id === userId));
-    
-    // Get saved ideas from local storage
-    const savedIdeaIds = getSavedIdeaIds();
-    setSavedIdeas(processedIdeas.filter(idea => savedIdeaIds.includes(idea.id)));
-    
-    // Get collaborating ideas - in a real app this would come from an API
-    setCollaboratingIdeas(processedIdeas.filter(idea => 
-      idea.collaborators.some(collab => collab.id === userId)
-    ));
-    
-    setLoading(false);
+    try {
+      // Get ideas from localStorage
+      const storedIdeas = getStoredIdeas();
+      const storedComments = getStoredComments();
+      
+      // Process ideas to add user-specific flags and ensure comments are up to date
+      const processedIdeas = storedIdeas.map(idea => ({
+        ...idea,
+        isOwner: idea.author.id === userId,
+        isSaved: getSavedIdeaIds().includes(idea.id),
+        comments: storedComments.filter(comment => comment.ideaId === idea.id),
+        // Ensure collaborators is always an array
+        collaborators: Array.isArray(idea.collaborators) ? idea.collaborators : []
+      }));
+      
+      setIdeas(processedIdeas);
+      
+      // Filter for user ideas
+      setUserIdeas(processedIdeas.filter(idea => idea.author.id === userId));
+      
+      // Get saved ideas from local storage
+      const savedIdeaIds = getSavedIdeaIds();
+      setSavedIdeas(processedIdeas.filter(idea => savedIdeaIds.includes(idea.id)));
+      
+      // Get collaborating ideas - in a real app this would come from an API
+      setCollaboratingIdeas(processedIdeas.filter(idea => {
+        // Make sure collaborators is an array before using .some()
+        return Array.isArray(idea.collaborators) && 
+               idea.collaborators.some(collab => collab.id === userId);
+      }));
+      
+    } catch (error) {
+      console.error("Error loading ideas:", error);
+    } finally {
+      setLoading(false);
+    }
   }, [userId]);
 
   // Save idea to user's saved list

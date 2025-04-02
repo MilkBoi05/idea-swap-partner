@@ -66,11 +66,11 @@ const IdeaCard = ({ idea }: IdeaCardProps) => {
           <div className="flex space-x-4 text-gray-500 text-sm">
             <div className="flex items-center">
               <Users size={16} className="mr-1" />
-              <span>{idea.collaborators.length}</span>
+              <span>{Array.isArray(idea.collaborators) ? idea.collaborators.length : 0}</span>
             </div>
             <div className="flex items-center">
               <MessageCircle size={16} className="mr-1" />
-              <span>{idea.comments.length}</span>
+              <span>{Array.isArray(idea.comments) ? idea.comments.length : 0}</span>
             </div>
           </div>
           <div>
