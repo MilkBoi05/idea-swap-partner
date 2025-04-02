@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
 import ProjectBoard from "./pages/ProjectBoard";
+import ProjectTasks from "./pages/ProjectTasks";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 import SignIn from "./pages/SignIn";
@@ -57,6 +58,11 @@ const App = () => (
             <Route path="/project/:id" element={
               <ProtectedRoute>
                 <ProjectBoard />
+              </ProtectedRoute>
+            } />
+            <Route path="/project/:id/tasks" element={
+              <ProtectedRoute>
+                <ProjectTasks />
               </ProtectedRoute>
             } />
             <Route path="/onboarding" element={

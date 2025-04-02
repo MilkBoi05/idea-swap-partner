@@ -1,91 +1,11 @@
 
 import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
-import IdeaCard, { Idea } from "@/components/ideas/IdeaCard";
+import IdeaCard from "@/components/ideas/IdeaCard";
 import SkillTag from "@/components/skills/SkillTag";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-
-const sampleIdeas: Idea[] = [
-  {
-    id: "1",
-    title: "AI-Powered Recipe Generator for Dietary Restrictions",
-    description: "An app that creates personalized recipe recommendations based on dietary restrictions, allergies, and ingredient availability using AI.",
-    author: {
-      name: "Alex Johnson",
-      avatar: "/placeholder.svg",
-    },
-    skills: ["AI/ML", "UI/UX Design", "Mobile Development"],
-    collaborators: 2,
-    likes: 24,
-    comments: 8,
-  },
-  {
-    id: "2",
-    title: "Blockchain Solution for Supply Chain Verification",
-    description: "A transparent, immutable system to track products from origin to consumer with blockchain technology.",
-    author: {
-      name: "Jamie Smith",
-      avatar: "/placeholder.svg",
-    },
-    skills: ["Blockchain", "Backend Development", "Product Management"],
-    collaborators: 3,
-    likes: 18,
-    comments: 5,
-  },
-  {
-    id: "3",
-    title: "Virtual Coworking Space for Remote Teams",
-    description: "Creating a virtual environment that replicates the serendipitous interactions and collaborative atmosphere of physical offices for remote teams.",
-    author: {
-      name: "Morgan Lee",
-      avatar: "/placeholder.svg",
-    },
-    skills: ["Frontend Development", "UI/UX Design", "Marketing"],
-    collaborators: 1,
-    likes: 32,
-    comments: 12,
-  },
-  {
-    id: "4",
-    title: "Smart Home Energy Management System",
-    description: "An IoT platform that optimizes energy usage in homes by learning from user habits and automating energy-saving measures.",
-    author: {
-      name: "Taylor Kim",
-      avatar: "/placeholder.svg",
-    },
-    skills: ["IoT", "Backend Development", "Data Science"],
-    collaborators: 0,
-    likes: 14,
-    comments: 3,
-  },
-  {
-    id: "5",
-    title: "Peer-to-Peer Skill Sharing Marketplace",
-    description: "A platform where people can teach their skills to others and learn new skills in return, using time as currency.",
-    author: {
-      name: "Jordan Patel",
-      avatar: "/placeholder.svg",
-    },
-    skills: ["Frontend Development", "Backend Development", "Marketing"],
-    collaborators: 1,
-    likes: 27,
-    comments: 9,
-  },
-  {
-    id: "6",
-    title: "Mental Health Chatbot for Teens",
-    description: "An AI-powered chatbot designed to provide mental health support and resources for teenagers in a friendly, non-judgmental way.",
-    author: {
-      name: "Casey Rivera",
-      avatar: "/placeholder.svg",
-    },
-    skills: ["AI/ML", "UI/UX Design", "Psychology"],
-    collaborators: 2,
-    likes: 41,
-    comments: 15,
-  },
-];
+import { useIdeas } from "@/hooks/useIdeas";
 
 const allSkills = [
   "Frontend Development",
@@ -105,6 +25,7 @@ const allSkills = [
 const BrowseIdeas = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const { ideas, loading } = useIdeas();
 
   const toggleSkill = (skill: string) => {
     setSelectedSkills((prev) =>
@@ -114,7 +35,7 @@ const BrowseIdeas = () => {
     );
   };
 
-  const filteredIdeas = sampleIdeas.filter((idea) => {
+  const filteredIdeas = ideas.filter((idea) => {
     // Filter by search query
     const matchesQuery =
       searchQuery === "" ||
@@ -169,7 +90,11 @@ const BrowseIdeas = () => {
         </div>
         
         {/* Ideas Grid */}
-        {filteredIdeas.length > 0 ? (
+        {loading ? (
+          <div className="text-center py-12">
+            <p>Loading ideas...</p>
+          </div>
+        ) : filteredIdeas.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredIdeas.map((idea) => (
               <IdeaCard key={idea.id} idea={idea} />

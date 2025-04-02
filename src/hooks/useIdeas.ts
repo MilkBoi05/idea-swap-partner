@@ -32,7 +32,7 @@ const mockIdeas: Idea[] = [
     author: {
       id: "user_123",
       name: "Alex Johnson",
-      avatar: "/placeholder.svg",
+      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80",
     },
     skills: ["AI/ML", "UI/UX Design", "Mobile Development"],
     collaborators: 2,
@@ -47,7 +47,7 @@ const mockIdeas: Idea[] = [
     author: {
       id: "user_456",
       name: "Taylor Smith",
-      avatar: "/placeholder.svg",
+      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80",
     },
     skills: ["Blockchain", "Backend Development", "Product Management"],
     collaborators: 3,
@@ -62,7 +62,7 @@ const mockIdeas: Idea[] = [
     author: {
       id: "user_789",
       name: "Morgan Lee",
-      avatar: "/placeholder.svg",
+      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80",
     },
     skills: ["Frontend Development", "UI/UX Design", "Marketing"],
     collaborators: 3,

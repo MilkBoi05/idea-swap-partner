@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Rocket } from "lucide-react";
+import { Search, Rocket, PlusCircle } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import IdeaCard, { Idea } from "@/components/ideas/IdeaCard";
 
@@ -14,7 +14,7 @@ const featuredIdeas: Idea[] = [
     description: "An app that creates personalized recipe recommendations based on dietary restrictions, allergies, and ingredient availability using AI.",
     author: {
       name: "Alex Johnson",
-      avatar: "/placeholder.svg",
+      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80",
     },
     skills: ["AI/ML", "UI/UX Design", "Mobile Development"],
     collaborators: 2,
@@ -27,7 +27,7 @@ const featuredIdeas: Idea[] = [
     description: "A transparent, immutable system to track products from origin to consumer with blockchain technology.",
     author: {
       name: "Jamie Smith",
-      avatar: "/placeholder.svg",
+      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80",
     },
     skills: ["Blockchain", "Backend Development", "Product Management"],
     collaborators: 3,
@@ -40,7 +40,7 @@ const featuredIdeas: Idea[] = [
     description: "Creating a virtual environment that replicates the serendipitous interactions and collaborative atmosphere of physical offices for remote teams.",
     author: {
       name: "Morgan Lee",
-      avatar: "/placeholder.svg",
+      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80",
     },
     skills: ["Frontend Development", "UI/UX Design", "Marketing"],
     collaborators: 1,
@@ -80,8 +80,11 @@ const Index = () => {
               and build something amazing together.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Button asChild size="lg" className="text-lg">
-                <Link to="/post-idea">Post Your Idea</Link>
+              <Button asChild size="lg" className="text-lg group animate-pulse hover:animate-none">
+                <Link to="/post-idea" className="flex items-center gap-2">
+                  <PlusCircle className="h-5 w-5" />
+                  <span>Post Your Idea</span>
+                </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="text-lg bg-white/10 hover:bg-white/20">
                 <Link to="/browse">Find Ideas to Join</Link>
@@ -170,7 +173,10 @@ const Index = () => {
             Join our community of innovators and skilled professionals today.
           </p>
           <Button asChild size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-            <Link to="/post-idea">Get Started</Link>
+            <Link to="/post-idea" className="flex items-center gap-2">
+              <PlusCircle className="h-5 w-5" />
+              <span>Get Started</span>
+            </Link>
           </Button>
         </div>
       </div>
