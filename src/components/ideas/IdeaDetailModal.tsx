@@ -6,10 +6,11 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { MessageSquare, Users, Star, Send } from "lucide-react";
 import SkillTag from "@/components/skills/SkillTag";
-import { Idea, Comment } from "@/hooks/useIdeas";
+import { Idea, Comment, useIdeas } from "@/hooks/useIdeas";
 import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 type IdeaDetailModalProps = {
   idea: Idea;
@@ -23,6 +24,8 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
   const [likeCount, setLikeCount] = useState(idea.likes);
   const [newComment, setNewComment] = useState("");
   const { userName, userId } = useAuth();
+  const { addComment } = useIdeas();
+  const [comments, setComments] = useState<Comment[]>(idea.comments || []);
 
   const toggleLike = () => {
     if (isLiked) {
@@ -43,29 +46,25 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
 
   const handleAddComment = () => {
     if (newComment.trim()) {
-      // In a real app, this would call an API to add the comment
-      // For now, we'll just add it to localStorage through the useIdeas hook
-      const commentData: Comment = {
-        id: `comment_${Date.now()}`,
-        author: {
-          id: userId || 'anonymous',
-          name: userName || 'Anonymous User',
-          avatar: "/placeholder.svg"
-        },
+      // Create comment data
+      const commentData = {
         text: newComment,
-        createdAt: new Date().toISOString(),
-        ideaId: idea.id
+        ideaId: idea.id,
       };
       
-      // This is where we would call a function to add the comment
-      // For now, we'll log it
-      console.log("Adding comment:", commentData);
+      // Add comment using the hook
+      const savedComment = addComment(commentData);
       
-      // Clear input
-      setNewComment("");
-      
-      // Close modal to refresh data (in a real app, we'd update state)
-      onClose();
+      if (savedComment) {
+        // Update local state with the new comment
+        setComments([...comments, savedComment]);
+        
+        // Show success toast
+        toast.success("Comment added successfully!");
+        
+        // Clear input
+        setNewComment("");
+      }
     }
   };
 
@@ -122,9 +121,9 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
           {/* Comments Section */}
           <div>
             <h4 className="text-sm font-medium mb-2">Comments:</h4>
-            {idea.comments.length > 0 ? (
+            {comments.length > 0 ? (
               <div className="space-y-3 max-h-60 overflow-y-auto">
-                {idea.comments.map((comment) => (
+                {comments.map((comment) => (
                   <div key={comment.id} className="bg-muted/50 p-3 rounded-md">
                     <div className="flex items-center space-x-2 mb-1">
                       <Avatar className="h-6 w-6">
@@ -178,7 +177,7 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
               </Button>
               <Button variant="ghost" size="sm" className="flex items-center gap-1">
                 <MessageSquare size={16} />
-                <span>{idea.comments.length}</span>
+                <span>{comments.length}</span>
               </Button>
             </div>
             <div className="flex gap-2">
