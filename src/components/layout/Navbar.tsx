@@ -4,15 +4,14 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, MessageSquare, LayoutDashboard, User, LogOut } from "lucide-react";
 import Logo from "@/components/branding/Logo";
-import { SignInButton, SignUpButton, UserButton, useAuth, useUser } from "@clerk/clerk-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { isSignedIn, isLoaded, signOut } = useAuth();
-  const { user } = useUser();
+  const { isAuthenticated, isLoading, userName, userProfileImage, handleSignOut } = useAuth();
   const { toast } = useToast();
 
   const navItems = [
@@ -23,12 +22,13 @@ const Navbar = () => {
   ];
 
   // Filter nav items based on auth status
-  const filteredNavItems = navItems.filter(item => !item.protected || isSignedIn);
+  const filteredNavItems = navItems.filter(item => !item.protected || isAuthenticated);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
-  const handleSignOut = async () => {
-    await signOut();
+  const onSignOut = async () => {
+    await handleSignOut();
+    setIsMenuOpen(false);
     toast({
       title: "Signed out successfully",
       description: "You have been signed out of your account.",
@@ -65,30 +65,33 @@ const Navbar = () => {
               ))}
             </div>
             <div className="flex items-center space-x-2">
-              {isSignedIn ? (
+              {isAuthenticated ? (
                 <div className="flex items-center gap-4">
                   <span className="text-sm text-gray-600">
-                    {user?.fullName || user?.username}
+                    {userName}
                   </span>
-                  <UserButton 
-                    afterSignOutUrl="/"
-                    appearance={{
-                      elements: {
-                        userButtonAvatarBox: "w-9 h-9"
-                      }
-                    }}
-                  />
+                  <div className="w-9 h-9 rounded-full bg-gray-200 overflow-hidden">
+                    {userProfileImage ? (
+                      <img
+                        src={userProfileImage}
+                        alt={userName || 'User'}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-full h-full p-2" />
+                    )}
+                  </div>
                 </div>
               ) : (
                 <>
-                  <SignInButton mode="modal">
+                  <Link to="/sign-in">
                     <Button variant="ghost" className="text-gray-600 hover:text-primary">
                       Sign In
                     </Button>
-                  </SignInButton>
-                  <SignUpButton mode="modal">
+                  </Link>
+                  <Link to="/sign-up">
                     <Button>Sign Up</Button>
-                  </SignUpButton>
+                  </Link>
                 </>
               )}
             </div>
@@ -128,37 +131,40 @@ const Navbar = () => {
           </div>
           <div className="pt-4 pb-3 border-t border-gray-200">
             <div className="px-4 flex items-center justify-center space-x-2">
-              {isSignedIn ? (
+              {isAuthenticated ? (
                 <div className="flex flex-col items-center w-full py-2">
                   <div className="flex items-center justify-center gap-2 mb-2">
                     <span className="text-sm text-gray-600">
-                      {user?.fullName || user?.username}
+                      {userName}
                     </span>
-                    <UserButton 
-                      afterSignOutUrl="/"
-                      appearance={{
-                        elements: {
-                          userButtonAvatarBox: "w-9 h-9"
-                        }
-                      }}
-                    />
+                    <div className="w-9 h-9 rounded-full bg-gray-200 overflow-hidden">
+                      {userProfileImage ? (
+                        <img
+                          src={userProfileImage}
+                          alt={userName || 'User'}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <User className="w-full h-full p-2" />
+                      )}
+                    </div>
                   </div>
                   <Button 
                     variant="outline" 
                     className="w-full flex items-center justify-center gap-2"
-                    onClick={handleSignOut}
+                    onClick={onSignOut}
                   >
                     <LogOut className="w-4 h-4" /> Sign Out
                   </Button>
                 </div>
               ) : (
                 <>
-                  <SignInButton mode="modal">
+                  <Link to="/sign-in" className="w-full" onClick={() => setIsMenuOpen(false)}>
                     <Button variant="ghost" className="w-full">Sign In</Button>
-                  </SignInButton>
-                  <SignUpButton mode="modal">
+                  </Link>
+                  <Link to="/sign-up" className="w-full" onClick={() => setIsMenuOpen(false)}>
                     <Button className="w-full">Sign Up</Button>
-                  </SignUpButton>
+                  </Link>
                 </>
               )}
             </div>
