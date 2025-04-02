@@ -96,23 +96,22 @@ export const useUserProfile = () => {
       }
       
       // Create update object with only supported fields
-      const updateData = {
-        name: profile.name,
-        avatar: avatarUrl,
-        updated_at: new Date().toISOString()
-      };
-
-      // Add optional fields if they exist in the database schema
-      // We'll do this conditionally to avoid errors with missing columns
+      // First, get the current profile to check which fields are present
       const { data: profileData } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
-      // Only include fields if they exist in the current schema
+      // Create an update data object with just the fields we know exist
+      const updateData: Record<string, any> = {
+        name: profile.name,
+        avatar: avatarUrl,
+        updated_at: new Date().toISOString()
+      };
+
+      // Only include fields that exist in the current schema and are provided in the profile update
       if (profileData) {
-        // Check if each field exists in the database schema before including it
         if ('bio' in profileData && profile.bio !== undefined) updateData['bio'] = profile.bio;
         if ('title' in profileData && profile.title !== undefined) updateData['title'] = profile.title;
         if ('skills' in profileData && profile.skills !== undefined) updateData['skills'] = profile.skills;
@@ -166,7 +165,12 @@ export const useUserProfile = () => {
       }
       
       // Check if onboarding_complete exists in the data
-      return data.onboarding_complete === true;
+      if ('onboarding_complete' in data) {
+        return data.onboarding_complete === true;
+      }
+      
+      // If the field doesn't exist, default to false
+      return false;
     } catch (error) {
       console.error("Error in getOnboardingStatus:", error);
       return false;

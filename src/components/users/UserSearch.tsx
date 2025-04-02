@@ -8,6 +8,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Search } from "lucide-react";
+import { toast } from "sonner";
 
 type User = {
   id: string;
@@ -29,18 +30,27 @@ const UserSearch = () => {
       
       setIsSearching(true);
       try {
-        let query = supabase
+        const { data, error } = await supabase
           .from('profiles')
-          .select('id, name, avatar, title, skills, location');
+          .select('id, name, avatar, title, skills, location')
+          .ilike('name', `%${searchTerm}%`)
+          .limit(10);
         
-        if (searchTerm) {
-          query = query.ilike('name', `%${searchTerm}%`);
+        if (error) {
+          console.error("Error fetching users:", error);
+          toast.error("Failed to search users");
+          throw error;
         }
         
-        const { data, error } = await query.limit(10);
-        
-        if (error) throw error;
-        return data as User[];
+        // Make sure each property exists even if it's null
+        return (data || []).map(user => ({
+          id: user.id,
+          name: user.name || "",
+          avatar: user.avatar,
+          title: user.title || null,
+          skills: user.skills || null,
+          location: user.location || null
+        })) as User[];
       } finally {
         setIsSearching(false);
       }

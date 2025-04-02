@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
@@ -58,7 +57,21 @@ const UserProfile = () => {
         .single();
       
       if (error) throw error;
-      return data as UserProfileData;
+      
+      // Ensure all expected fields are present in the returned object
+      return {
+        id: data.id,
+        name: data.name || "",
+        avatar: data.avatar,
+        title: data.title || null,
+        bio: data.bio || null,
+        location: data.location || null,
+        skills: data.skills || [],
+        website: data.website || null,
+        github: data.github || null,
+        twitter: data.twitter || null,
+        linkedin: data.linkedin || null
+      } as UserProfileData;
     },
     enabled: !!userId,
   });
@@ -148,14 +161,14 @@ const UserProfile = () => {
               <div className="sm:flex sm:space-x-5">
                 <div className="flex-shrink-0 -mt-16">
                   <Avatar className="w-24 h-24 border-4 border-white">
-                    <AvatarImage src={profile.avatar || undefined} alt={profile.name} />
-                    <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
+                    <AvatarImage src={profile?.avatar || undefined} alt={profile?.name} />
+                    <AvatarFallback>{profile?.name?.charAt(0)}</AvatarFallback>
                   </Avatar>
                 </div>
                 <div className="mt-4 text-center sm:mt-0 sm:pt-1 sm:text-left">
-                  <p className="text-xl font-bold text-gray-900">{profile.name}</p>
-                  {profile.title && <p className="text-sm text-gray-500">{profile.title}</p>}
-                  {profile.location && <p className="text-sm text-gray-500">{profile.location}</p>}
+                  <p className="text-xl font-bold text-gray-900">{profile?.name}</p>
+                  {profile?.title && <p className="text-sm text-gray-500">{profile.title}</p>}
+                  {profile?.location && <p className="text-sm text-gray-500">{profile.location}</p>}
                 </div>
               </div>
               <div className="mt-5 sm:mt-0">
@@ -179,7 +192,7 @@ const UserProfile = () => {
                     <CardTitle>About</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p>{profile.bio || "This user hasn't added a bio yet."}</p>
+                    <p>{profile?.bio || "This user hasn't added a bio yet."}</p>
                   </CardContent>
                 </Card>
                 
@@ -188,7 +201,7 @@ const UserProfile = () => {
                     <CardTitle>Skills</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {profile.skills && profile.skills.length > 0 ? (
+                    {profile?.skills && profile.skills.length > 0 ? (
                       <div className="flex flex-wrap gap-2">
                         {profile.skills.map((skill) => (
                           <SkillTag key={skill} name={skill} />
@@ -207,7 +220,7 @@ const UserProfile = () => {
                     <CardTitle>Social Links</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {profile.website && (
+                    {profile?.website && (
                       <div className="flex items-center">
                         <span className="font-medium w-24">Website:</span>
                         <a href={profile.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
@@ -215,7 +228,7 @@ const UserProfile = () => {
                         </a>
                       </div>
                     )}
-                    {profile.github && (
+                    {profile?.github && (
                       <div className="flex items-center">
                         <span className="font-medium w-24">GitHub:</span>
                         <a href={`https://github.com/${profile.github}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
@@ -223,7 +236,7 @@ const UserProfile = () => {
                         </a>
                       </div>
                     )}
-                    {profile.twitter && (
+                    {profile?.twitter && (
                       <div className="flex items-center">
                         <span className="font-medium w-24">Twitter:</span>
                         <a href={`https://twitter.com/${profile.twitter}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
@@ -231,7 +244,7 @@ const UserProfile = () => {
                         </a>
                       </div>
                     )}
-                    {profile.linkedin && (
+                    {profile?.linkedin && (
                       <div className="flex items-center">
                         <span className="font-medium w-24">LinkedIn:</span>
                         <a href={`https://linkedin.com/in/${profile.linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
@@ -239,7 +252,7 @@ const UserProfile = () => {
                         </a>
                       </div>
                     )}
-                    {!profile.website && !profile.github && !profile.twitter && !profile.linkedin && (
+                    {!profile?.website && !profile?.github && !profile?.twitter && !profile?.linkedin && (
                       <p className="text-sm text-muted-foreground">This user hasn't added any social links yet.</p>
                     )}
                   </CardContent>
