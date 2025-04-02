@@ -9,59 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import SkillTag from "@/components/skills/SkillTag";
 import IdeaCard from "@/components/ideas/IdeaCard";
-import { Idea } from "@/hooks/useIdeas";
+import { useIdeas } from "@/hooks/useIdeas";
 import { Edit3, UploadCloud } from "lucide-react";
-
-const mockIdeas: Idea[] = [
-  {
-    id: "1",
-    title: "AI-Powered Recipe Generator for Dietary Restrictions",
-    description: "An app that creates personalized recipe recommendations based on dietary restrictions, allergies, and ingredient availability using AI.",
-    author: {
-      id: "user_1",
-      name: "Alex Johnson",
-      avatar: "/placeholder.svg",
-    },
-    skills: ["AI/ML", "UI/UX Design", "Mobile Development"],
-    collaborators: 2,
-    likes: 24,
-    comments: 8,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    title: "Blockchain Solution for Supply Chain Verification",
-    description: "A transparent, immutable system to track products from origin to consumer with blockchain technology.",
-    author: {
-      id: "user_2",
-      name: "Alex Johnson",
-      avatar: "/placeholder.svg",
-    },
-    skills: ["Blockchain", "Backend Development", "Product Management"],
-    collaborators: 3,
-    likes: 18,
-    comments: 5,
-    createdAt: new Date().toISOString(),
-  },
-];
-
-const collaboratingIdeas: Idea[] = [
-  {
-    id: "3",
-    title: "Virtual Coworking Space for Remote Teams",
-    description: "Creating a virtual environment that replicates the serendipitous interactions and collaborative atmosphere of physical offices for remote teams.",
-    author: {
-      id: "user_3",
-      name: "Morgan Lee",
-      avatar: "/placeholder.svg",
-    },
-    skills: ["Frontend Development", "UI/UX Design", "Marketing"],
-    collaborators: 3,
-    likes: 32,
-    comments: 12,
-    createdAt: new Date().toISOString(),
-  },
-];
 
 const allSkills = [
   "Web Development", "Mobile Development", "UI/UX Design", "Frontend", "Backend",
@@ -72,6 +21,7 @@ const allSkills = [
 ];
 
 const Profile = () => {
+  const { userIdeas, collaboratingIdeas } = useIdeas();
   const [editMode, setEditMode] = useState(false);
   const [selectedSkills, setSelectedSkills] = useState<string[]>(["UI/UX Design", "Frontend", "Product Management"]);
   const [profileForm, setProfileForm] = useState({
@@ -132,17 +82,15 @@ const Profile = () => {
                   </div>
                 </div>
                 <div className="mt-4 text-center sm:mt-0 sm:pt-1 sm:text-left">
-                  <div className="flex items-center">
-                    {editMode ? (
-                      <Input
-                        value={profileForm.name}
-                        onChange={(e) => handleProfileChange('name', e.target.value)}
-                        className="font-bold text-xl mb-1 w-72"
-                      />
-                    ) : (
-                      <p className="text-xl font-bold text-gray-900">{profileForm.name}</p>
-                    )}
-                  </div>
+                  {editMode ? (
+                    <Input
+                      value={profileForm.name}
+                      onChange={(e) => handleProfileChange('name', e.target.value)}
+                      className="font-bold text-xl mb-1 w-72"
+                    />
+                  ) : (
+                    <p className="text-xl font-bold text-gray-900">{profileForm.name}</p>
+                  )}
                   
                   {editMode ? (
                     <Input
@@ -351,7 +299,7 @@ const Profile = () => {
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-gray-500">Ideas Posted</span>
-                        <span className="font-semibold">{mockIdeas.length}</span>
+                        <span className="font-semibold">{userIdeas.length}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-500">Collaborating On</span>
@@ -370,17 +318,37 @@ const Profile = () => {
           
           <TabsContent value="ideas">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mockIdeas.map(idea => (
-                <IdeaCard key={idea.id} idea={idea} />
-              ))}
+              {userIdeas.length > 0 ? (
+                userIdeas.map(idea => (
+                  <IdeaCard key={idea.id} idea={idea} />
+                ))
+              ) : (
+                <div className="col-span-full text-center py-12">
+                  <h3 className="text-xl font-medium mb-2">No ideas yet</h3>
+                  <p className="text-gray-500 mb-4">You haven't posted any ideas yet.</p>
+                  <Button asChild>
+                    <a href="/post-idea">Post Your First Idea</a>
+                  </Button>
+                </div>
+              )}
             </div>
           </TabsContent>
           
           <TabsContent value="collaborating">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {collaboratingIdeas.map(idea => (
-                <IdeaCard key={idea.id} idea={idea} />
-              ))}
+              {collaboratingIdeas.length > 0 ? (
+                collaboratingIdeas.map(idea => (
+                  <IdeaCard key={idea.id} idea={idea} />
+                ))
+              ) : (
+                <div className="col-span-full text-center py-12">
+                  <h3 className="text-xl font-medium mb-2">Not collaborating yet</h3>
+                  <p className="text-gray-500 mb-4">You're not collaborating on any ideas yet.</p>
+                  <Button asChild>
+                    <a href="/browse">Find Ideas to Join</a>
+                  </Button>
+                </div>
+              )}
             </div>
           </TabsContent>
           
