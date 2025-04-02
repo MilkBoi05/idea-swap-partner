@@ -19,6 +19,7 @@ const mockIdeas: Idea[] = [
     title: "AI-Powered Recipe Generator for Dietary Restrictions",
     description: "An app that creates personalized recipe recommendations based on dietary restrictions, allergies, and ingredient availability using AI.",
     author: {
+      id: "user_1", // Added id property
       name: "Alex Johnson",
       avatar: "/placeholder.svg",
     },
@@ -32,6 +33,7 @@ const mockIdeas: Idea[] = [
     title: "Blockchain Solution for Supply Chain Verification",
     description: "A transparent, immutable system to track products from origin to consumer with blockchain technology.",
     author: {
+      id: "user_2", // Added id property
       name: "Alex Johnson",
       avatar: "/placeholder.svg",
     },
@@ -48,6 +50,7 @@ const collaboratingIdeas: Idea[] = [
     title: "Virtual Coworking Space for Remote Teams",
     description: "Creating a virtual environment that replicates the serendipitous interactions and collaborative atmosphere of physical offices for remote teams.",
     author: {
+      id: "user_3", // Added id property
       name: "Morgan Lee",
       avatar: "/placeholder.svg",
     },
