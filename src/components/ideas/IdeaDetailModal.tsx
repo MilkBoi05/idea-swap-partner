@@ -46,10 +46,15 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
 
   const handleAddComment = () => {
     if (newComment.trim()) {
-      // Create comment data
+      // Create comment data with the required author property
       const commentData = {
         text: newComment,
         ideaId: idea.id,
+        author: {
+          id: userId || "anonymous",
+          name: userName || "Anonymous User",
+          avatar: "/placeholder.svg",
+        }
       };
       
       // Add comment using the hook
