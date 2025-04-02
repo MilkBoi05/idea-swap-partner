@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import SkillTag from "@/components/skills/SkillTag";
-import IdeaCard, { Idea } from "@/components/ideas/IdeaCard";
+import IdeaCard from "@/components/ideas/IdeaCard";
+import { Idea } from "@/hooks/useIdeas"; // Corrected import
 import { Edit3, UploadCloud } from "lucide-react";
 
 const mockIdeas: Idea[] = [

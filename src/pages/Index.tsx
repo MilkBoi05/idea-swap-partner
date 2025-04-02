@@ -1,11 +1,11 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Rocket, PlusCircle } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
-import IdeaCard, { Idea } from "@/components/ideas/IdeaCard";
+import IdeaCard from "@/components/ideas/IdeaCard";
+import { Idea } from "@/hooks/useIdeas";
 
 const featuredIdeas: Idea[] = [
   {
