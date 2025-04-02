@@ -31,6 +31,11 @@ const IdeaCard = ({ idea }: IdeaCardProps) => {
     console.log(`Messaging ${idea.author.name}`);
   };
 
+  const handleCommentClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click from triggering
+    setShowDetailModal(true);
+  };
+
   return (
     <>
       <Card 
@@ -68,7 +73,10 @@ const IdeaCard = ({ idea }: IdeaCardProps) => {
               <Users size={16} className="mr-1" />
               <span>{Array.isArray(idea.collaborators) ? idea.collaborators.length : 0}</span>
             </div>
-            <div className="flex items-center">
+            <div 
+              className="flex items-center cursor-pointer hover:text-gray-700"
+              onClick={handleCommentClick}
+            >
               <MessageCircle size={16} className="mr-1" />
               <span>{Array.isArray(idea.comments) ? idea.comments.length : 0}</span>
             </div>
