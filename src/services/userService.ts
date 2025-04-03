@@ -84,14 +84,17 @@ export const useUserProfile = () => {
       let avatarUrl = profile.profileImage;
       if (profilePicture) {
         try {
+          console.log("Uploading profile image for user:", userId);
           const uploadedUrl = await uploadProfileImage(userId, profilePicture);
           if (uploadedUrl) {
+            console.log("Profile image uploaded successfully:", uploadedUrl);
             avatarUrl = uploadedUrl;
           } else {
             console.warn("Profile image upload failed, using existing image");
           }
         } catch (error) {
           console.error("Failed to upload profile image:", error);
+          // Continue with the update even if the image upload fails
         }
       }
       
@@ -106,9 +109,13 @@ export const useUserProfile = () => {
       // Create an update data object with just the fields we know exist
       const updateData: Record<string, any> = {
         name: profile.name,
-        avatar: avatarUrl,
         updated_at: new Date().toISOString()
       };
+      
+      // Only add avatar if we have a URL
+      if (avatarUrl) {
+        updateData.avatar = avatarUrl;
+      }
 
       // Only include fields that exist in the current schema and are provided in the profile update
       if (profileData) {
@@ -121,6 +128,8 @@ export const useUserProfile = () => {
         if ('twitter' in profileData && profile.twitter !== undefined) updateData['twitter'] = profile.twitter;
         if ('linkedin' in profileData && profile.linkedin !== undefined) updateData['linkedin'] = profile.linkedin;
       }
+      
+      console.log("Updating profile with data:", updateData);
       
       // Update profile in Supabase
       const { data, error } = await supabase

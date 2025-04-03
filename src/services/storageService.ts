@@ -1,18 +1,5 @@
 
-import { createClient } from '@supabase/supabase-js';
-
-// Initialize the Supabase client (this is handled by the Supabase integration)
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-// Check if the environment variables are properly set
-if (!supabaseUrl || !supabaseKey) {
-  console.error('Missing Supabase URL or Anonymous Key. Please check your environment variables.');
-}
-
-export const supabase = supabaseUrl && supabaseKey 
-  ? createClient(supabaseUrl, supabaseKey)
-  : null;
+import { supabase } from '@/integrations/supabase/client';
 
 // Storage bucket names
 const BUCKETS = {
@@ -91,7 +78,7 @@ export const uploadProfileImage = async (userId: string, file: File) => {
     return publicURL.publicUrl;
   } catch (error) {
     console.error('Error uploading profile image:', error);
-    throw error;
+    return null; // Return null instead of throwing the error
   }
 };
 
@@ -124,7 +111,7 @@ export const uploadIdeaImage = async (ideaId: string, file: File) => {
     return publicURL.publicUrl;
   } catch (error) {
     console.error('Error uploading idea image:', error);
-    throw error;
+    return null; // Return null instead of throwing the error
   }
 };
 
@@ -166,7 +153,7 @@ export const uploadAttachment = async (userId: string, file: File, type: 'task' 
     };
   } catch (error) {
     console.error('Error uploading attachment:', error);
-    throw error;
+    return null; // Return null instead of throwing the error
   }
 };
 
@@ -196,7 +183,7 @@ export const getFileUrl = async (bucket: string, filePath: string) => {
     }
   } catch (error) {
     console.error('Error getting file URL:', error);
-    throw error;
+    return null; // Return null instead of throwing the error
   }
 };
 
@@ -217,6 +204,6 @@ export const deleteFile = async (bucket: string, filePath: string) => {
     return true;
   } catch (error) {
     console.error('Error deleting file:', error);
-    throw error;
+    return false; // Return false instead of throwing the error
   }
 };
