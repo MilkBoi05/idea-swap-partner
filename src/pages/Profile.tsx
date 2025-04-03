@@ -54,23 +54,26 @@ const Profile = () => {
       if (userId) {
         const profile = await getUserProfile(userId);
         if (profile) {
-          setProfileForm({
-            name: profile.name || "",
-            title: profile.title || "",
-            location: profile.location || "",
-            bio: profile.bio || "",
-            email: profile.email || userEmail || "",
-            website: profile.website || "",
-            github: profile.github || "",
-            twitter: profile.twitter || "",
-            linkedin: profile.linkedin || "",
-            profileImage: profile.profileImage || ""
-          });
+          // Only set initial values if the form is empty
+          if (!profileForm.name && !profileForm.title && !profileForm.location) {
+            setProfileForm({
+              name: profile.name || "",
+              title: profile.title || "",
+              location: profile.location || "",
+              bio: profile.bio || "",
+              email: profile.email || userEmail || "",
+              website: profile.website || "",
+              github: profile.github || "",
+              twitter: profile.twitter || "",
+              linkedin: profile.linkedin || "",
+              profileImage: profile.profileImage || ""
+            });
 
-          setSelectedSkills(profile.skills || []);
+            setSelectedSkills(profile.skills || []);
 
-          if (profile.profileImage) {
-            setProfileImagePreview(profile.profileImage);
+            if (profile.profileImage) {
+              setProfileImagePreview(profile.profileImage);
+            }
           }
         }
       }
