@@ -85,17 +85,17 @@ export const useUserProfile = () => {
       if (profilePicture) {
         try {
           console.log("Uploading profile image for user:", userId, profilePicture);
-          // Wait for the upload to complete and get the URL
           const uploadedUrl = await uploadProfileImage(userId, profilePicture);
           if (uploadedUrl) {
             console.log("Profile image uploaded successfully:", uploadedUrl);
             avatarUrl = uploadedUrl;
           } else {
-            console.warn("Profile image upload failed, using existing image");
+            throw new Error("Profile image upload failed");
           }
         } catch (error) {
           console.error("Failed to upload profile image:", error);
-          // Continue with the update even if the image upload fails
+          toast.error("Failed to upload profile image");
+          return null;
         }
       }
       

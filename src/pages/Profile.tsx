@@ -133,10 +133,7 @@ const Profile = () => {
 
     try {
       setIsSaving(true);
-
-      if (profileImage) {
-        console.log("Uploading profile image:", profileImage.name);
-      }
+      console.log("Saving profile with data:", profileForm);
 
       const result = await updateUserProfile(userId, {
         name: profileForm.name,
@@ -150,6 +147,10 @@ const Profile = () => {
         linkedin: profileForm.linkedin,
         profileImage: profileImagePreview || profileForm.profileImage
       }, profileImage);
+
+      if (!result) {
+        throw new Error("Failed to update profile");
+      }
 
       if (result) {
         setProfileForm(prev => ({
