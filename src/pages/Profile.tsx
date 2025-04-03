@@ -52,10 +52,10 @@ const Profile = () => {
 
   useEffect(() => {
     const loadProfile = async () => {
-      if (userId) {
+      if (userId && !editMode) {
         const profile = await getUserProfile(userId);
         if (profile) {
-          setProfileForm({
+          const newFormData = {
             name: profile.name || "",
             title: profile.title || "",
             location: profile.location || "",
@@ -66,6 +66,13 @@ const Profile = () => {
             twitter: profile.twitter || "",
             linkedin: profile.linkedin || "",
             profileImage: profile.profileImage || ""
+          };
+          
+          setProfileForm(prev => {
+            if (JSON.stringify(prev) === JSON.stringify(newFormData)) {
+              return prev;
+            }
+            return newFormData;
           });
 
           setSelectedSkills(profile.skills || []);
@@ -78,7 +85,7 @@ const Profile = () => {
     };
 
     loadProfile();
-  }, [userId, getUserProfile, userEmail]);
+  }, [userId, getUserProfile, userEmail, editMode]);
 
   const handleProfileChange = (field: string, value: string) => {
     console.log("Updating field:", field, "with value:", value);
