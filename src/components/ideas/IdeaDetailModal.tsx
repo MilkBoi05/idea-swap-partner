@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -143,21 +144,20 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
             {comments.length > 0 ? (
               <div className="space-y-3 max-h-60 overflow-y-auto">
                 {comments.map((comment) => (
-                  <div key={comment.id} className="bg-muted/50 p-3 rounded-md relative">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <UserAvatar
-                        avatarUrl={comment.author.avatar}
-                        name={comment.author.name}
-                        className="h-6 w-6"
-                      />
-                      <span className="text-sm font-medium">{comment.author.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {formatDate(comment.createdAt)}
-                      </span>
-                      
-                      {comment.author.id === userId && (
-                        <ContextMenu>
-                          <ContextMenuTrigger asChild>
+                  comment.author.id === userId ? (
+                    <ContextMenu key={comment.id}>
+                      <ContextMenuTrigger>
+                        <div className="bg-muted/50 p-3 rounded-md relative">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <UserAvatar
+                              avatarUrl={comment.author.avatar}
+                              name={comment.author.name}
+                              className="h-6 w-6"
+                            />
+                            <span className="text-sm font-medium">{comment.author.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {formatDate(comment.createdAt)}
+                            </span>
                             <Button
                               variant="ghost"
                               size="sm"
@@ -165,20 +165,35 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
                             >
                               <MoreVertical className="h-4 w-4" />
                             </Button>
-                          </ContextMenuTrigger>
-                          <ContextMenuContent className="w-48">
-                            <ContextMenuItem 
-                              className="text-red-600 cursor-pointer"
-                              onClick={() => handleDeleteComment(comment.id)}
-                            >
-                              Delete Comment
-                            </ContextMenuItem>
-                          </ContextMenuContent>
-                        </ContextMenu>
-                      )}
+                          </div>
+                          <p className="text-sm">{comment.text}</p>
+                        </div>
+                      </ContextMenuTrigger>
+                      <ContextMenuContent className="w-48">
+                        <ContextMenuItem 
+                          className="text-red-600 cursor-pointer"
+                          onClick={() => handleDeleteComment(comment.id)}
+                        >
+                          Delete Comment
+                        </ContextMenuItem>
+                      </ContextMenuContent>
+                    </ContextMenu>
+                  ) : (
+                    <div key={comment.id} className="bg-muted/50 p-3 rounded-md">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <UserAvatar
+                          avatarUrl={comment.author.avatar}
+                          name={comment.author.name}
+                          className="h-6 w-6"
+                        />
+                        <span className="text-sm font-medium">{comment.author.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatDate(comment.createdAt)}
+                        </span>
+                      </div>
+                      <p className="text-sm">{comment.text}</p>
                     </div>
-                    <p className="text-sm">{comment.text}</p>
-                  </div>
+                  )
                 ))}
               </div>
             ) : (
