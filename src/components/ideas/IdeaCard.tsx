@@ -73,6 +73,7 @@ const IdeaCard = ({
 
   // Called when a comment is added or deleted in the modal
   const handleCommentCountChange = (newCount: number) => {
+    console.log(`Updating comment count to ${newCount}`);
     setCommentCount(newCount);
   };
 

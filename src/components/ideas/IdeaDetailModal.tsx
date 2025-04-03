@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import SkillTag from "@/components/skills/SkillTag";
@@ -40,7 +39,7 @@ const IdeaDetailModal = ({
     }
   }, [isOpen, idea.comments]);
 
-  // Update comment count in parent component when comments change
+  // Update comment count in parent component immediately when comments change
   useEffect(() => {
     if (onCommentCountChange) {
       onCommentCountChange(comments.length);
