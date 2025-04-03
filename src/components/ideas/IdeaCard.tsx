@@ -22,7 +22,8 @@ const IdeaCard = ({
   const [likeCount, setLikeCount] = useState(idea.likes);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [currentIdea, setCurrentIdea] = useState<Idea>(idea);
-  // Initialize comment count from idea comments array
+  
+  // Initialize comment count from idea comments array - ensuring it's only set once on mount
   const [commentCount, setCommentCount] = useState(
     Array.isArray(idea.comments) ? idea.comments.length : 0
   );
@@ -34,14 +35,9 @@ const IdeaCard = ({
     refreshIdeas
   } = useIdeas();
 
-  // Update local state when idea prop changes
+  // Only update currentIdea without resetting the comment count when idea prop changes
   useEffect(() => {
     setCurrentIdea(idea);
-    // Update comment count when idea changes
-    if (Array.isArray(idea.comments)) {
-      console.log(`Updating comment count to ${idea.comments.length}`);
-      setCommentCount(idea.comments.length);
-    }
   }, [idea]);
 
   const toggleLike = (e: React.MouseEvent) => {

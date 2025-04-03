@@ -122,11 +122,7 @@ const BrowseIdeas = () => {
                 {filteredIdeas.map((idea) => (
                   <IdeaCard 
                     key={idea.id} 
-                    idea={{
-                      ...idea,
-                      // Ensure comments is always an array
-                      comments: Array.isArray(idea.comments) ? idea.comments : []
-                    }} 
+                    idea={idea} 
                   />
                 ))}
               </div>
