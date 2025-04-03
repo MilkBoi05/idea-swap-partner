@@ -267,8 +267,8 @@ const Profile = () => {
 
                   {editMode ? (
                     <Input
-                      id="title"
-                      value={profileForm.title}
+                      type="text"
+                      value={profileForm.title || ''}
                       onChange={(e) => handleProfileChange('title', e.target.value)}
                       className="text-sm text-gray-500 mb-1 w-72"
                       placeholder="Your professional title"
