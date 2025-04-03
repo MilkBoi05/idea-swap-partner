@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -28,6 +28,19 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
   const { addComment } = useIdeas();
   const [comments, setComments] = useState<Comment[]>(idea.comments || []);
   const navigate = useNavigate();
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Handle navigation after modal is closed completely
+    if (!isOpen && pendingNavigation) {
+      const timer = setTimeout(() => {
+        navigate(pendingNavigation);
+        setPendingNavigation(null);
+      }, 100); // Short delay to ensure modal is closed
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, pendingNavigation, navigate]);
 
   const toggleLike = () => {
     if (isLiked) {
@@ -80,22 +93,22 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
   const handleMessageAuthor = () => {
     if (!isAuthenticated) {
       toast.error("Please sign in to message");
-      // Close the modal and navigate to sign in
       onClose();
-      navigate("/sign-in");
+      setPendingNavigation("/sign-in");
       return;
     }
     
     if (onMessageAuthor) {
       onMessageAuthor();
-      onClose(); // Also close the modal when using the callback
+      onClose();
       return;
     }
     
-    // Navigate to the Messages page with author information
-    console.log("Messaging", idea.author.name);
-    onClose(); // Close the modal before navigation
-    navigate(`/messages?authorId=${idea.author.id}&authorName=${encodeURIComponent(idea.author.name)}`);
+    // Store the navigation path but don't navigate immediately
+    console.log("Setting up navigation to message", idea.author.name);
+    const messagePath = `/messages?authorId=${idea.author.id}&authorName=${encodeURIComponent(idea.author.name)}`;
+    setPendingNavigation(messagePath);
+    onClose(); 
   };
 
   return (
