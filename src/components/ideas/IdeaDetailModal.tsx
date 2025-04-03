@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 type IdeaDetailModalProps = {
   idea: Idea;
@@ -26,6 +27,7 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
   const { userName, userId, isAuthenticated } = useAuth();
   const { addComment } = useIdeas();
   const [comments, setComments] = useState<Comment[]>(idea.comments || []);
+  const navigate = useNavigate();
 
   const toggleLike = () => {
     if (isLiked) {
@@ -78,9 +80,14 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
   const handleMessageAuthor = () => {
     if (onMessageAuthor) {
       onMessageAuthor();
-    } else {
-      toast.info(`Messaging ${idea.author.name} is not available yet`);
+      return;
     }
+    
+    // Navigate to the Messages page with author information
+    navigate(`/messages?authorId=${idea.author.id}&authorName=${encodeURIComponent(idea.author.name)}`);
+    
+    // Close the modal
+    onClose();
   };
 
   return (
@@ -98,10 +105,6 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
                 <p className="text-sm text-muted-foreground">{formatDate(idea.createdAt)}</p>
               </div>
             </div>
-            <Badge variant="outline" className="flex items-center">
-              <Users size={14} className="mr-1" />
-              <span>{idea.collaborators.length} collaborator{idea.collaborators.length !== 1 ? "s" : ""}</span>
-            </Badge>
           </div>
           <DialogTitle className="text-2xl">{idea.title}</DialogTitle>
           <DialogDescription className="text-base text-foreground mt-2">

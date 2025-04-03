@@ -1,11 +1,13 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Send } from "lucide-react";
+import { toast } from "sonner";
 
 type Message = {
   id: string;
@@ -135,17 +137,125 @@ const formatTime = (date: Date) => {
 };
 
 const Messages = () => {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const authorId = searchParams.get('authorId');
+  const authorName = searchParams.get('authorName');
+  
   const [activeConversation, setActiveConversation] = useState<string | null>("1");
   const [newMessage, setNewMessage] = useState("");
+  const [conversations, setConversations] = useState<Conversation[]>(mockConversations);
+  
+  // Handle incoming author from IdeaDetailModal
+  useEffect(() => {
+    if (authorId && authorName) {
+      // Check if a conversation with this author already exists
+      const existingConversation = conversations.find(conv => conv.participantId === authorId);
+      
+      if (existingConversation) {
+        // If conversation exists, set it as active
+        setActiveConversation(existingConversation.id);
+        toast.info(`Showing conversation with ${authorName}`);
+      } else {
+        // Create a new conversation
+        const newConversationId = `new-${authorId}`;
+        const newConversation: Conversation = {
+          id: newConversationId,
+          participantId: authorId,
+          participantName: authorName,
+          participantAvatar: "/placeholder.svg",
+          lastMessage: "New conversation",
+          lastMessageTime: new Date(),
+          unreadCount: 0,
+        };
+        
+        // Add the new conversation to the list
+        setConversations([newConversation, ...conversations]);
+        
+        // Set it as the active conversation
+        setActiveConversation(newConversationId);
+        
+        // Initialize empty messages for this conversation
+        mockMessages[newConversationId] = [];
+        
+        toast.success(`Started a new conversation with ${authorName}`);
+      }
+      
+      // Clean up the URL to remove the query parameters
+      window.history.replaceState({}, document.title, "/messages");
+    }
+  }, [authorId, authorName]);
   
   const handleSendMessage = () => {
-    if (newMessage.trim() === "") return;
+    if (newMessage.trim() === "" || !activeConversation) return;
     
-    // In a real app, this would send the message to a backend
-    console.log("Sending message:", newMessage);
+    // Get the current conversation
+    const conversation = conversations.find(conv => conv.id === activeConversation);
+    if (!conversation) return;
     
-    // Clear input after sending
+    // Create a new message
+    const newMsg: Message = {
+      id: `m${Date.now()}`,
+      senderId: "currentUser",
+      recipientId: conversation.participantId,
+      content: newMessage,
+      timestamp: new Date(),
+      read: false,
+    };
+    
+    // Add the message to the conversation
+    if (!mockMessages[activeConversation]) {
+      mockMessages[activeConversation] = [];
+    }
+    mockMessages[activeConversation] = [...mockMessages[activeConversation], newMsg];
+    
+    // Update the conversation's last message and time
+    const updatedConversations = conversations.map(conv => {
+      if (conv.id === activeConversation) {
+        return {
+          ...conv,
+          lastMessage: newMessage,
+          lastMessageTime: new Date(),
+        };
+      }
+      return conv;
+    });
+    
+    setConversations(updatedConversations);
+    
+    // Clear the input
     setNewMessage("");
+    
+    // Simulate a reply after a short delay
+    setTimeout(() => {
+      if (conversation) {
+        const replyMsg: Message = {
+          id: `m${Date.now() + 1}`,
+          senderId: conversation.participantId,
+          recipientId: "currentUser",
+          content: `Thanks for your message! This is an automated reply from ${conversation.participantName}.`,
+          timestamp: new Date(),
+          read: false,
+        };
+        
+        mockMessages[activeConversation] = [...mockMessages[activeConversation], replyMsg];
+        
+        // Update the UI to show the new message
+        const updatedConversationsWithReply = conversations.map(conv => {
+          if (conv.id === activeConversation) {
+            return {
+              ...conv,
+              lastMessage: replyMsg.content,
+              lastMessageTime: replyMsg.timestamp,
+              unreadCount: conv.unreadCount + 1,
+            };
+          }
+          return conv;
+        });
+        
+        setConversations(updatedConversationsWithReply);
+      }
+    }, 2000);
   };
   
   return (
@@ -169,7 +279,7 @@ const Messages = () => {
                   <Input placeholder="Search conversations..." className="w-full" />
                 </div>
                 <div className="overflow-y-auto h-[calc(100%-60px)]">
-                  {mockConversations.map((conversation) => (
+                  {conversations.map((conversation) => (
                     <div 
                       key={conversation.id}
                       onClick={() => setActiveConversation(conversation.id)}
@@ -209,13 +319,13 @@ const Messages = () => {
                   <>
                     <div className="p-4 border-b flex items-center">
                       <img 
-                        src={mockConversations.find(c => c.id === activeConversation)?.participantAvatar} 
+                        src={conversations.find(c => c.id === activeConversation)?.participantAvatar} 
                         alt="Avatar"
                         className="w-10 h-10 rounded-full"
                       />
                       <div className="ml-3">
                         <h3 className="font-medium">
-                          {mockConversations.find(c => c.id === activeConversation)?.participantName}
+                          {conversations.find(c => c.id === activeConversation)?.participantName}
                         </h3>
                       </div>
                     </div>
