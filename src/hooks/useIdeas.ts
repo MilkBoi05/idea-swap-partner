@@ -333,6 +333,52 @@ export const useIdeas = () => {
     }
   };
 
+  const deleteComment = async (commentId: string, ideaId: string) => {
+    if (!isAuthenticated) {
+      toast.error("Please sign in to delete comments");
+      return false;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('comments')
+        .delete()
+        .match({ id: commentId });
+      
+      if (error) throw error;
+      
+      // Update local state
+      const updatedIdeas = ideas.map(idea => {
+        if (idea.id === ideaId) {
+          return {
+            ...idea,
+            comments: idea.comments.filter(comment => comment.id !== commentId)
+          };
+        }
+        return idea;
+      });
+      
+      setIdeas(updatedIdeas);
+      setUserIdeas(updatedIdeas.filter(idea => idea.author.id === userId));
+      setSavedIdeas(updatedIdeas.filter(idea => idea.isSaved));
+      
+      toast.success("Comment deleted successfully");
+      return true;
+    } catch (error: any) {
+      console.error("Error deleting comment:", error);
+      toast.error(error.message || "Failed to delete comment");
+      return false;
+    }
+  };
+      
+      return newComment;
+    } catch (error: any) {
+      console.error("Error adding comment:", error);
+      toast.error(error.message || "Failed to add comment");
+      return null;
+    }
+  };
+
   // Create a new idea
   const createIdea = async (idea: Omit<Idea, 'id' | 'author' | 'collaborators' | 'comments' | 'likes' | 'createdAt' | 'isOwner' | 'isSaved' | 'coverImage'>) => {
     if (!isAuthenticated) {

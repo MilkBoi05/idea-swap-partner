@@ -137,6 +137,22 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
                       <span className="text-xs text-muted-foreground">
                         {formatDate(comment.createdAt)}
                       </span>
+                      {comment.author.id === userId && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 ml-auto"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            const success = await deleteComment(comment.id, idea.id);
+                            if (success) {
+                              setComments(comments.filter(c => c.id !== comment.id));
+                            }
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      )}
                     </div>
                     <p className="text-sm">{comment.text}</p>
                   </div>
