@@ -130,7 +130,9 @@ const Profile = () => {
     try {
       setIsSaving(true);
       
-      console.log("Saving profile with image:", profileImage ? profileImage.name : "No new image");
+      if (profileImage) {
+        console.log("Uploading profile image:", profileImage.name);
+      }
       
       const result = await updateUserProfile(userId, {
         name: profileForm.name,
@@ -141,7 +143,8 @@ const Profile = () => {
         website: profileForm.website,
         github: profileForm.github,
         twitter: profileForm.twitter,
-        linkedin: profileForm.linkedin
+        linkedin: profileForm.linkedin,
+        profileImage: profileImagePreview || profileForm.profileImage
       }, profileImage);
       
       if (result) {
