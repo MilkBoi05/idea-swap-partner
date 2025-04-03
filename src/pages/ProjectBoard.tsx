@@ -1,433 +1,364 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/layout/Navbar";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar, CheckCircle2, Clock, Plus, MoreVertical, MessageSquare } from "lucide-react";
+  SidebarProvider,
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarInset
+} from "@/components/ui/sidebar";
+import { useAuth } from "@/contexts/AuthContext";
+import { LayoutDashboard, MessageSquare, Loader, Users, Clock, Settings } from "lucide-react";
 
-type Task = {
+// Define types for project data
+type Project = {
   id: string;
   title: string;
   description: string;
-  status: "backlog" | "todo" | "in-progress" | "done";
-  dueDate?: Date;
-  assignee?: {
-    id: string;
-    name: string;
-    avatar?: string;
-  };
-  priority: "low" | "medium" | "high";
-  comments: number;
+  author_id: string;
+  authorName?: string;
+  skills: string[];
+  createdAt: string;
 };
 
-type Column = {
-  id: "backlog" | "todo" | "in-progress" | "done";
-  title: string;
-  tasks: Task[];
-};
-
-const mockTasks: Task[] = [
-  {
-    id: "1",
-    title: "Create wireframes for landing page",
-    description: "Design the initial wireframes for the app's landing page following our brand guidelines.",
-    status: "backlog",
-    dueDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // 7 days from now
-    assignee: {
-      id: "user1",
-      name: "Alex Johnson",
-      avatar: "/placeholder.svg",
-    },
-    priority: "medium",
-    comments: 3,
-  },
-  {
-    id: "2",
-    title: "Implement user authentication",
-    description: "Set up user authentication using Firebase Auth with email/password and Google sign-in options.",
-    status: "backlog",
-    priority: "high",
-    comments: 0,
-  },
-  {
-    id: "3",
-    title: "Market research for target audience",
-    description: "Conduct market research to identify key demographics and user needs for our product.",
-    status: "todo",
-    dueDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 3), // 3 days from now
-    assignee: {
-      id: "user2",
-      name: "Jamie Smith",
-      avatar: "/placeholder.svg",
-    },
-    priority: "high",
-    comments: 5,
-  },
-  {
-    id: "4",
-    title: "Define MVP features",
-    description: "Create a list of essential features for the minimum viable product launch.",
-    status: "todo",
-    priority: "medium",
-    comments: 2,
-  },
-  {
-    id: "5",
-    title: "Setup development environment",
-    description: "Install necessary tools and configure the development environment for the team.",
-    status: "in-progress",
-    dueDate: new Date(Date.now() + 1000 * 60 * 60 * 24), // 1 day from now
-    assignee: {
-      id: "user3",
-      name: "Morgan Lee",
-      avatar: "/placeholder.svg",
-    },
-    priority: "low",
-    comments: 1,
-  },
-  {
-    id: "6",
-    title: "Logo design",
-    description: "Create the final logo for the product based on approved sketches.",
-    status: "in-progress",
-    priority: "medium",
-    comments: 8,
-  },
-  {
-    id: "7",
-    title: "Competitive analysis report",
-    description: "Complete analysis of key competitors in the market.",
-    status: "done",
-    assignee: {
-      id: "user1",
-      name: "Alex Johnson",
-      avatar: "/placeholder.svg",
-    },
-    priority: "high",
-    comments: 0,
-  },
-  {
-    id: "8",
-    title: "Project brief document",
-    description: "Finalize the project brief outlining goals, timeline and resources.",
-    status: "done",
-    priority: "medium",
-    comments: 4,
-  },
-];
-
-const initialColumns: Column[] = [
-  { id: "backlog", title: "Backlog", tasks: mockTasks.filter(t => t.status === "backlog") },
-  { id: "todo", title: "To Do", tasks: mockTasks.filter(t => t.status === "todo") },
-  { id: "in-progress", title: "In Progress", tasks: mockTasks.filter(t => t.status === "in-progress") },
-  { id: "done", title: "Done", tasks: mockTasks.filter(t => t.status === "done") },
-];
-
-const getPriorityColor = (priority: string) => {
-  switch (priority) {
-    case "high":
-      return "bg-red-500";
-    case "medium":
-      return "bg-yellow-500";
-    case "low":
-      return "bg-green-500";
-    default:
-      return "bg-gray-500";
-  }
+type Collaborator = {
+  id: string;
+  name: string;
+  avatar: string | null;
+  role: string;
 };
 
 const ProjectBoard = () => {
-  const [columns, setColumns] = useState<Column[]>(initialColumns);
-  const [newTask, setNewTask] = useState<Partial<Task>>({
-    title: "",
-    description: "",
-    status: "backlog",
-    priority: "medium",
+  const { id } = useParams<{ id: string }>();
+  const { userId } = useAuth();
+  const [activeTab, setActiveTab] = useState("overview");
+
+  // Fetch project details
+  const { data: project, isLoading: loadingProject } = useQuery({
+    queryKey: ["project", id],
+    queryFn: async () => {
+      const { data: idea, error } = await supabase
+        .from("ideas")
+        .select("*, profiles(name)")
+        .eq("id", id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching project:", error);
+        throw new Error("Failed to load project");
+      }
+
+      // Format project data
+      return {
+        id: idea.id,
+        title: idea.title,
+        description: idea.description,
+        author_id: idea.author_id,
+        authorName: idea.profiles?.name || "Unknown",
+        skills: idea.skills || [],
+        createdAt: new Date(idea.created_at).toLocaleDateString(),
+      } as Project;
+    },
+    enabled: !!id,
   });
-  
-  const handleDragStart = (e: React.DragEvent, taskId: string, sourceColumnId: string) => {
-    e.dataTransfer.setData("taskId", taskId);
-    e.dataTransfer.setData("sourceColumnId", sourceColumnId);
-  };
-  
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-  
-  const handleDrop = (e: React.DragEvent, targetColumnId: string) => {
-    e.preventDefault();
-    const taskId = e.dataTransfer.getData("taskId");
-    const sourceColumnId = e.dataTransfer.getData("sourceColumnId");
-    
-    if (sourceColumnId === targetColumnId) return;
-    
-    setColumns(prev => {
-      const newColumns = [...prev];
-      
-      // Find the task in the source column
-      const sourceColumnIndex = newColumns.findIndex(col => col.id === sourceColumnId);
-      const sourceColumn = newColumns[sourceColumnIndex];
-      const taskIndex = sourceColumn.tasks.findIndex(t => t.id === taskId);
-      const task = sourceColumn.tasks[taskIndex];
-      
-      // Remove the task from the source column
-      newColumns[sourceColumnIndex].tasks = sourceColumn.tasks.filter(t => t.id !== taskId);
-      
-      // Add the task to the target column with updated status
-      const targetColumnIndex = newColumns.findIndex(col => col.id === targetColumnId);
-      newColumns[targetColumnIndex].tasks.push({
-        ...task,
-        status: targetColumnId as "backlog" | "todo" | "in-progress" | "done",
-      });
-      
-      return newColumns;
-    });
-  };
-  
-  const handleAddTask = () => {
-    if (!newTask.title) return;
-    
-    const task: Task = {
-      id: Math.random().toString(36).substr(2, 9), // generate a random ID
-      title: newTask.title,
-      description: newTask.description || "",
-      status: newTask.status as "backlog" | "todo" | "in-progress" | "done",
-      priority: newTask.priority as "low" | "medium" | "high",
-      comments: 0,
-    };
-    
-    setColumns(prev => {
-      const newColumns = [...prev];
-      const columnIndex = newColumns.findIndex(col => col.id === task.status);
-      newColumns[columnIndex].tasks.push(task);
-      return newColumns;
-    });
-    
-    // Reset the form
-    setNewTask({
-      title: "",
-      description: "",
-      status: "backlog",
-      priority: "medium",
-    });
-  };
-  
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-  
+
+  // Fetch collaborators
+  const { data: collaborators = [], isLoading: loadingCollaborators } = useQuery({
+    queryKey: ["collaborators", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("collaborators")
+        .select("user_id, role, profiles:user_id(id, name, avatar)")
+        .eq("idea_id", id);
+
+      if (error) {
+        console.error("Error fetching collaborators:", error);
+        return [];
+      }
+
+      return data.map((collab: any) => ({
+        id: collab.profiles?.id,
+        name: collab.profiles?.name || "Unknown",
+        avatar: collab.profiles?.avatar,
+        role: collab.role,
+      })) as Collaborator[];
+    },
+    enabled: !!id,
+  });
+
+  if (loadingProject || loadingCollaborators) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center p-8">
+            <h2 className="text-xl font-bold mb-2">Project not found</h2>
+            <p className="text-gray-500 mb-4">The project you're looking for doesn't exist or you don't have access to it.</p>
+            <Button asChild>
+              <Link to="/dashboard">Back to Dashboard</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold">Project Board</h1>
-            <p className="text-gray-600">Track and manage your project tasks</p>
-          </div>
-          
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" /> Add Task
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Task</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Title</Label>
-                  <Input 
-                    id="title" 
-                    placeholder="Task title"
-                    value={newTask.title}
-                    onChange={(e) => setNewTask({...newTask, title: e.target.value})}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea 
-                    id="description" 
-                    placeholder="Task description"
-                    value={newTask.description}
-                    onChange={(e) => setNewTask({...newTask, description: e.target.value})}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="status">Status</Label>
-                    <select
-                      id="status"
-                      className="w-full border border-gray-300 rounded-md p-2"
-                      value={newTask.status}
-                      onChange={(e) => setNewTask({...newTask, status: e.target.value as any})}
-                    >
-                      <option value="backlog">Backlog</option>
-                      <option value="todo">To Do</option>
-                      <option value="in-progress">In Progress</option>
-                      <option value="done">Done</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="priority">Priority</Label>
-                    <select
-                      id="priority"
-                      className="w-full border border-gray-300 rounded-md p-2"
-                      value={newTask.priority}
-                      onChange={(e) => setNewTask({...newTask, priority: e.target.value as any})}
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="submit" onClick={handleAddTask}>Add Task</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
+      <SidebarProvider className="flex-1 flex w-full">
+        <Sidebar>
+          <SidebarHeader className="p-4 border-b">
+            <h2 className="text-lg font-bold truncate">{project.title}</h2>
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Overview">
+                  <Link to={`/project/${id}`}>
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    <span>Overview</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Tasks">
+                  <Link to={`/project/${id}/tasks`}>
+                    <Clock className="mr-2 h-4 w-4" />
+                    <span>Tasks</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Team Chat">
+                  <Link to={`/project/${id}/chat`}>
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    <span>Team Chat</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Team Members">
+                  <Link to={`/project/${id}/team`}>
+                    <Users className="mr-2 h-4 w-4" />
+                    <span>Team</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Settings">
+                  <Link to={`/project/${id}/settings`}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarContent>
+        </Sidebar>
         
-        <Tabs defaultValue="kanban" className="mb-6">
-          <TabsList>
-            <TabsTrigger value="kanban">Kanban Board</TabsTrigger>
-            <TabsTrigger value="list">List View</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="kanban" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {columns.map((column) => (
-                <div
-                  key={column.id}
-                  className="bg-gray-50 rounded-md p-4"
-                  onDragOver={handleDragOver}
-                  onDrop={(e) => handleDrop(e, column.id)}
-                >
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-medium">{column.title}</h3>
-                    <div className="bg-gray-200 text-xs font-medium px-2 py-1 rounded-full">
-                      {column.tasks.length}
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    {column.tasks.map((task) => (
-                      <div
-                        key={task.id}
-                        className="bg-white p-3 rounded-md shadow-sm cursor-move"
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, task.id, column.id)}
-                      >
-                        <div className="flex justify-between items-start">
-                          <h4 className="font-medium text-sm">{task.title}</h4>
-                          <button className="text-gray-500">
-                            <MoreVertical className="h-4 w-4" />
-                          </button>
-                        </div>
-                        
-                        {task.description && (
-                          <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                            {task.description}
-                          </p>
-                        )}
-                        
-                        <div className="flex justify-between items-center mt-2">
-                          <div className="flex items-center gap-2">
-                            {task.assignee ? (
-                              <Avatar className="h-6 w-6">
-                                <AvatarImage src={task.assignee.avatar} />
-                                <AvatarFallback className="text-xs">
-                                  {task.assignee.name.charAt(0)}
-                                </AvatarFallback>
-                              </Avatar>
-                            ) : (
-                              <div className="h-6 w-6 rounded-full border-2 border-dashed border-gray-300" />
-                            )}
-                            
-                            {task.comments > 0 && (
-                              <div className="flex items-center text-xs text-gray-500">
-                                <MessageSquare className="h-3 w-3 mr-1" />
-                                {task.comments}
-                              </div>
-                            )}
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            {task.dueDate && (
-                              <div className="flex items-center text-xs text-gray-500">
-                                <Clock className="h-3 w-3 mr-1" />
-                                {formatDate(task.dueDate)}
-                              </div>
-                            )}
-                            <div className={`h-2 w-2 rounded-full ${getPriorityColor(task.priority)}`} />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+        <SidebarInset className="bg-gray-50">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="mb-6">
+              <h1 className="text-3xl font-bold">{project.title}</h1>
+              <p className="text-gray-500">Created by {project.authorName} on {project.createdAt}</p>
             </div>
-          </TabsContent>
-          
-          <TabsContent value="list" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>All Tasks</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {mockTasks.map((task) => (
-                    <div key={task.id} className="flex items-center justify-between p-3 border-b last:border-0">
-                      <div className="flex items-center space-x-3">
-                        <div className={`h-3 w-3 rounded-full ${getPriorityColor(task.priority)}`} />
-                        <div>
-                          <h4 className="font-medium">{task.title}</h4>
-                          <div className="flex items-center space-x-3 text-xs text-gray-500">
-                            <span>{task.status}</span>
-                            {task.assignee && <span>Assigned to {task.assignee.name}</span>}
+            
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+              <TabsList>
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="collaborators">Team</TabsTrigger>
+                <TabsTrigger value="skills">Required Skills</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="overview" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Project Description</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="whitespace-pre-wrap">{project.description}</p>
+                  </CardContent>
+                </Card>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Quick Actions</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <Button asChild className="w-full">
+                        <Link to={`/project/${id}/tasks`}>
+                          <Clock className="mr-2 h-4 w-4" />
+                          View Tasks
+                        </Link>
+                      </Button>
+                      <Button asChild variant="outline" className="w-full">
+                        <Link to={`/project/${id}/chat`}>
+                          <MessageSquare className="mr-2 h-4 w-4" />
+                          Team Chat
+                        </Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Team</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-2">
+                        <li className="flex items-center justify-between border-b pb-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center">
+                              {project.authorName.charAt(0).toUpperCase()}
+                            </div>
+                            <span>{project.authorName}</span>
+                          </div>
+                          <span className="text-sm font-medium bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
+                            Project Owner
+                          </span>
+                        </li>
+                        
+                        {collaborators.map((collaborator) => (
+                          <li key={collaborator.id} className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden">
+                                {collaborator.avatar ? (
+                                  <img 
+                                    src={collaborator.avatar} 
+                                    alt={collaborator.name} 
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-gray-500">
+                                    {collaborator.name.charAt(0).toUpperCase()}
+                                  </div>
+                                )}
+                              </div>
+                              <span>{collaborator.name}</span>
+                            </div>
+                            <span className="text-sm font-medium bg-gray-100 text-gray-800 px-2 py-0.5 rounded">
+                              {collaborator.role}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                      
+                      {collaborators.length === 0 && (
+                        <div className="text-center py-2">
+                          <p className="text-gray-500">No collaborators yet</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="collaborators">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Team Members</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="divide-y">
+                      <li className="flex items-center justify-between py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center">
+                            {project.authorName.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <h4 className="font-medium">{project.authorName}</h4>
+                            <p className="text-sm text-gray-500">Project Owner</p>
                           </div>
                         </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        {task.dueDate && (
-                          <div className="flex items-center text-xs text-gray-500">
-                            <Calendar className="h-3 w-3 mr-1" />
-                            {formatDate(task.dueDate)}
+                      </li>
+                      
+                      {collaborators.map((collaborator) => (
+                        <li key={collaborator.id} className="flex items-center justify-between py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
+                              {collaborator.avatar ? (
+                                <img 
+                                  src={collaborator.avatar} 
+                                  alt={collaborator.name} 
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-gray-500">
+                                  {collaborator.name.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <h4 className="font-medium">{collaborator.name}</h4>
+                              <p className="text-sm text-gray-500">{collaborator.role}</p>
+                            </div>
                           </div>
-                        )}
-                        {task.status === "done" && (
-                          <CheckCircle2 className="h-5 w-5 text-green-500" />
-                        )}
+                        </li>
+                      ))}
+                    </ul>
+                    
+                    {collaborators.length === 0 && (
+                      <div className="text-center py-6">
+                        <p className="text-gray-500">No collaborators yet</p>
+                        <Button variant="outline" className="mt-4">
+                          Invite Team Members
+                        </Button>
                       </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="skills">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Required Skills</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {project.skills.map((skill, index) => (
+                        <span 
+                          key={index} 
+                          className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                      
+                      {project.skills.length === 0 && (
+                        <p className="text-gray-500">No specific skills listed</p>
+                      )}
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </SidebarInset>
+      </SidebarProvider>
     </div>
   );
 };

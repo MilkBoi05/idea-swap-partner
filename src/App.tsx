@@ -14,6 +14,7 @@ import Profile from "./pages/Profile";
 import UserProfile from "./pages/UserProfile";
 import ProjectBoard from "./pages/ProjectBoard";
 import ProjectTasks from "./pages/ProjectTasks";
+import ProjectChat from "./pages/ProjectChat"; // Add import for the new chat page
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 import SignIn from "./pages/SignIn";
@@ -59,6 +60,8 @@ const App = () => (
                 <UserProfile />
               </ProtectedRoute>
             } />
+            
+            {/* Project Routes */}
             <Route path="/project/:id" element={
               <ProtectedRoute>
                 <ProjectBoard />
@@ -67,6 +70,11 @@ const App = () => (
             <Route path="/project/:id/tasks" element={
               <ProtectedRoute>
                 <ProjectTasks />
+              </ProtectedRoute>
+            } />
+            <Route path="/project/:id/chat" element={
+              <ProtectedRoute>
+                <ProjectChat />
               </ProtectedRoute>
             } />
             <Route path="/onboarding" element={
