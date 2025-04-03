@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
@@ -7,15 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import SkillTag from "@/components/skills/SkillTag";
 import IdeaCard from "@/components/ideas/IdeaCard";
 import { useIdeas } from "@/hooks/useIdeas";
-import { Edit3, UploadCloud, Briefcase, Calendar, List, Search } from "lucide-react";
+import { Edit3, UploadCloud, Briefcase, Calendar, List } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/services/userService";
 import { toast } from "sonner";
 import UserSearch from "@/components/users/UserSearch";
+import UserAvatar from "@/components/profiles/UserAvatar";
 
 const allSkills = [
   "Web Development", "Mobile Development", "UI/UX Design", "Frontend", "Backend",
@@ -42,8 +43,11 @@ const Profile = () => {
     website: "",
     github: "",
     twitter: "",
-    linkedin: ""
+    linkedin: "",
+    profileImage: ""
   });
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
   
   useEffect(() => {
     const loadProfile = async () => {
@@ -59,10 +63,16 @@ const Profile = () => {
             website: profile.website || "",
             github: profile.github || "",
             twitter: profile.twitter || "",
-            linkedin: profile.linkedin || ""
+            linkedin: profile.linkedin || "",
+            profileImage: profile.profileImage || ""
           });
           
           setSelectedSkills(profile.skills || []);
+          
+          // Set existing profile image
+          if (profile.profileImage) {
+            setProfileImagePreview(profile.profileImage);
+          }
         }
       }
     };
@@ -75,6 +85,20 @@ const Profile = () => {
       ...prev,
       [field]: value
     }));
+  };
+  
+  const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setProfileImage(file);
+      
+      // Create a preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
   
   const toggleSkill = (skill: string) => {
@@ -99,9 +123,10 @@ const Profile = () => {
         github: profileForm.github,
         twitter: profileForm.twitter,
         linkedin: profileForm.linkedin
-      });
+      }, profileImage);
       
       setEditMode(false);
+      setProfileImage(null); // Clear file selection after upload
       toast.success("Profile updated successfully");
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -135,17 +160,44 @@ const Profile = () => {
             <div className="sm:flex sm:items-center sm:justify-between">
               <div className="sm:flex sm:space-x-5">
                 <div className="flex-shrink-0 -mt-16">
-                  <div className="relative">
-                    <Avatar className="w-24 h-24 border-4 border-white">
-                      <AvatarImage src="/placeholder.svg" alt="Profile" />
-                      <AvatarFallback>{profileForm.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    {editMode && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
-                        <Button variant="ghost" size="icon" className="text-white">
-                          <UploadCloud className="h-5 w-5" />
-                        </Button>
-                      </div>
+                  <div className="relative group">
+                    {editMode ? (
+                      <>
+                        {profileImagePreview ? (
+                          <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white">
+                            <img 
+                              src={profileImagePreview} 
+                              alt="Profile preview" 
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <UserAvatar 
+                            name={profileForm.name} 
+                            className="w-24 h-24 border-4 border-white" 
+                            avatarUrl={profileForm.profileImage}
+                          />
+                        )}
+                        <label
+                          htmlFor="profile-image"
+                          className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-all"
+                        >
+                          <UploadCloud className="h-5 w-5 text-white" />
+                          <input
+                            id="profile-image"
+                            type="file"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={handleProfileImageChange}
+                          />
+                        </label>
+                      </>
+                    ) : (
+                      <UserAvatar 
+                        name={profileForm.name} 
+                        className="w-24 h-24 border-4 border-white" 
+                        avatarUrl={profileForm.profileImage}
+                      />
                     )}
                   </div>
                 </div>

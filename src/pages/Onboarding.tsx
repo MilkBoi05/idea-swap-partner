@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,6 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUserProfile } from "@/services/userService";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Upload } from "lucide-react";
+import UserAvatar from "@/components/profiles/UserAvatar";
 
 const Onboarding = () => {
   const { userId } = useAuth();
@@ -21,6 +25,8 @@ const Onboarding = () => {
   const [newSkill, setNewSkill] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
   
   const handleAddSkill = () => {
     if (newSkill.trim() && !skills.includes(newSkill.trim())) {
@@ -31,6 +37,20 @@ const Onboarding = () => {
   
   const handleRemoveSkill = (skillToRemove: string) => {
     setSkills(skills.filter(skill => skill !== skillToRemove));
+  };
+  
+  const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setProfileImage(file);
+      
+      // Create a preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,7 +77,7 @@ const Onboarding = () => {
         bio,
         skills,
         location
-      });
+      }, profileImage);
       
       // Mark onboarding as complete
       await completeOnboarding(userId);
@@ -90,6 +110,36 @@ const Onboarding = () => {
                   {error}
                 </div>
               )}
+              
+              <div className="flex flex-col items-center mb-6">
+                <div className="relative group w-24 h-24 mb-3">
+                  {profileImagePreview ? (
+                    <div className="w-24 h-24 rounded-full overflow-hidden">
+                      <img src={profileImagePreview} alt="Profile preview" className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <UserAvatar 
+                      name={name || "Your Name"} 
+                      className="w-24 h-24"
+                    />
+                  )}
+                  <label 
+                    htmlFor="profile-image" 
+                    className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 flex items-center justify-center rounded-full cursor-pointer transition-all duration-200"
+                  >
+                    <Upload className="text-white opacity-0 group-hover:opacity-100" />
+                    <span className="sr-only">Upload profile picture</span>
+                  </label>
+                  <input
+                    type="file"
+                    id="profile-image"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleProfileImageChange}
+                  />
+                </div>
+                <p className="text-sm text-gray-500">Click to upload your profile picture</p>
+              </div>
               
               <div className="space-y-2">
                 <label htmlFor="name" className="text-sm font-medium">
