@@ -1,9 +1,7 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Users, Star, Send } from "lucide-react";
+import { MessageSquare, Star, Send, MoreVertical } from "lucide-react";
 import SkillTag from "@/components/skills/SkillTag";
 import UserAvatar from "@/components/profiles/UserAvatar";
 import { Idea, Comment, useIdeas } from "@/hooks/useIdeas";
@@ -78,6 +76,19 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
     }
   };
 
+  const handleDeleteComment = async (commentId: string) => {
+    if (!isAuthenticated) {
+      toast.error("Please sign in to delete comments");
+      return;
+    }
+    
+    const success = await deleteComment(commentId, idea.id);
+    if (success) {
+      setComments(comments.filter(c => c.id !== commentId));
+      toast.success("Comment deleted successfully");
+    }
+  };
+
   const handleMessageAuthor = () => {
     if (!isAuthenticated) {
       toast.error("Please sign in to message");
@@ -132,7 +143,7 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
             {comments.length > 0 ? (
               <div className="space-y-3 max-h-60 overflow-y-auto">
                 {comments.map((comment) => (
-                  <div key={comment.id} className="bg-muted/50 p-3 rounded-md">
+                  <div key={comment.id} className="bg-muted/50 p-3 rounded-md relative">
                     <div className="flex items-center space-x-2 mb-1">
                       <UserAvatar
                         avatarUrl={comment.author.avatar}
@@ -143,27 +154,22 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
                       <span className="text-xs text-muted-foreground">
                         {formatDate(comment.createdAt)}
                       </span>
+                      
                       {comment.author.id === userId && (
                         <ContextMenu>
                           <ContextMenuTrigger asChild>
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-6 px-2 ml-auto"
+                              className="h-6 px-2 ml-auto absolute right-2 top-3"
                             >
-                              •••
+                              <MoreVertical className="h-4 w-4" />
                             </Button>
                           </ContextMenuTrigger>
-                          <ContextMenuContent>
-                            <ContextMenuItem
-                              className="text-red-600"
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                const success = await deleteComment(comment.id, idea.id);
-                                if (success) {
-                                  setComments(comments.filter(c => c.id !== comment.id));
-                                }
-                              }}
+                          <ContextMenuContent className="w-48">
+                            <ContextMenuItem 
+                              className="text-red-600 cursor-pointer"
+                              onClick={() => handleDeleteComment(comment.id)}
                             >
                               Delete Comment
                             </ContextMenuItem>
