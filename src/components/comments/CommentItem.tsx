@@ -6,6 +6,7 @@ import UserAvatar from "@/components/profiles/UserAvatar";
 import { format } from "date-fns";
 import { Comment } from "@/hooks/useIdeas";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { toast } from "sonner";
 
 type CommentItemProps = {
   comment: Comment;
@@ -25,12 +26,20 @@ const CommentItem = ({ comment, userId, onDeleteComment }: CommentItemProps) => 
     }
   };
 
-  const handleDeleteClick = () => {
-    console.log(`CommentItem: Delete button clicked for comment ${comment.id}`);
-    // Call the delete function directly
-    onDeleteComment(comment.id);
-    // Close the popover immediately for better UX
+  const handleDelete = () => {
+    // Close popover first for better UX
     setIsPopoverOpen(false);
+    
+    // Show immediate feedback
+    toast.info("Deleting comment...");
+    
+    try {
+      // Call delete directly - no confirmation, just do it
+      onDeleteComment(comment.id);
+    } catch (err) {
+      console.error("Failed to delete comment:", err);
+      toast.error("Failed to delete comment");
+    }
   };
 
   return (
@@ -47,28 +56,17 @@ const CommentItem = ({ comment, userId, onDeleteComment }: CommentItemProps) => 
         </span>
         
         {isAuthor && (
-          <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 px-2 ml-auto absolute right-2 top-3"
-              >
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-40 p-1">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="w-full justify-start text-red-600"
-                onClick={handleDeleteClick}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete Comment
-              </Button>
-            </PopoverContent>
-          </Popover>
+          <div className="ml-auto absolute right-2 top-3">
+            {/* Changed to a direct button instead of popover for simplicity */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
+              onClick={handleDelete}
+            >
+              <Trash2 className="h-4 w-4 text-red-600" />
+            </Button>
+          </div>
         )}
       </div>
       <p className="text-sm">{comment.text}</p>

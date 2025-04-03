@@ -61,24 +61,19 @@ const CommentsSection = ({
     
     console.log(`CommentsSection: Handling delete for comment ${commentId}`);
     
-    // Optimistically update UI
+    // Optimistically remove from local state immediately
     setLocalComments(currentComments => 
       currentComments.filter(c => c.id !== commentId)
     );
     
-    // Show success toast
-    toast.promise(
-      onDeleteComment(commentId), 
-      {
-        loading: 'Deleting comment...',
-        success: 'Comment deleted',
-        error: (err) => {
-          // Restore the comment if deletion fails
-          setLocalComments(comments);
-          return 'Failed to delete comment';
-        },
-      }
-    );
+    // Attempt to delete from database
+    onDeleteComment(commentId).catch(error => {
+      console.error("Error deleting comment:", error);
+      toast.error("Failed to delete comment");
+      
+      // If deletion fails, restore the comments from props
+      setLocalComments(comments);
+    });
   };
 
   return (

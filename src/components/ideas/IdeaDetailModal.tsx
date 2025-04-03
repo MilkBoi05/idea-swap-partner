@@ -76,26 +76,14 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
   };
 
   const handleDeleteComment = async (commentId: string) => {
-    if (!isAuthenticated) {
-      toast.error("Please sign in to delete comments");
-      return;
-    }
-    
     console.log(`IdeaDetailModal: Deleting comment ${commentId} for idea ${idea.id}`);
     
     try {
-      const success = await deleteComment(commentId, idea.id);
-      
-      if (success) {
-        console.log(`IdeaDetailModal: Comment deletion successful`);
-        // We don't need to update the state here as it's handled in CommentsSection
-        return Promise.resolve();
-      } else {
-        console.error(`IdeaDetailModal: Failed to delete comment ${commentId}`);
-        return Promise.reject(new Error("Failed to delete comment"));
-      }
+      await deleteComment(commentId, idea.id);
+      console.log("Delete operation completed");
+      return Promise.resolve();
     } catch (error) {
-      console.error("Error deleting comment:", error);
+      console.error("Error in handleDeleteComment:", error);
       return Promise.reject(error);
     }
   };
