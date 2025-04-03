@@ -2,10 +2,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { MessageSquare, Users, Star, Send } from "lucide-react";
 import SkillTag from "@/components/skills/SkillTag";
+import UserAvatar from "@/components/profiles/UserAvatar";
 import { Idea, Comment, useIdeas } from "@/hooks/useIdeas";
 import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
@@ -103,10 +103,11 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
         <DialogHeader>
           <div className="flex justify-between items-start mb-4">
             <div className="flex items-center space-x-3">
-              <Avatar className="h-12 w-12">
-                <AvatarImage src={idea.author.avatar} alt={idea.author.name} />
-                <AvatarFallback>{idea.author.name.charAt(0).toUpperCase()}</AvatarFallback>
-              </Avatar>
+              <UserAvatar 
+                avatarUrl={idea.author.avatar} 
+                name={idea.author.name} 
+                className="h-12 w-12" 
+              />
               <div>
                 <p className="font-medium">{idea.author.name}</p>
                 <p className="text-sm text-muted-foreground">{formatDate(idea.createdAt)}</p>
@@ -136,10 +137,11 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
                 {comments.map((comment) => (
                   <div key={comment.id} className="bg-muted/50 p-3 rounded-md">
                     <div className="flex items-center space-x-2 mb-1">
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage src={comment.author.avatar} alt={comment.author.name} />
-                        <AvatarFallback>{comment.author.name.charAt(0).toUpperCase()}</AvatarFallback>
-                      </Avatar>
+                      <UserAvatar
+                        avatarUrl={comment.author.avatar}
+                        name={comment.author.name}
+                        className="h-6 w-6"
+                      />
                       <span className="text-sm font-medium">{comment.author.name}</span>
                       <span className="text-xs text-muted-foreground">
                         {formatDate(comment.createdAt)}

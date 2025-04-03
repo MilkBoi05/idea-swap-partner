@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import UserAvatar from "@/components/profiles/UserAvatar";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Search } from "lucide-react";
@@ -87,10 +87,11 @@ const UserSearch = () => {
             <Card key={user.id} className="overflow-hidden">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={user.avatar || undefined} alt={user.name} />
-                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
+                  <UserAvatar
+                    avatarUrl={user.avatar}
+                    name={user.name}
+                    className="h-10 w-10"
+                  />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{user.name}</p>
                     {user.title && <p className="text-sm text-muted-foreground truncate">{user.title}</p>}

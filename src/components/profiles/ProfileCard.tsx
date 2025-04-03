@@ -2,7 +2,7 @@
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import SkillTag from "../skills/SkillTag";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import UserAvatar from "./UserAvatar";
 import { Link } from "react-router-dom";
 
 export type Profile = {
@@ -25,10 +25,11 @@ const ProfileCard = ({ profile }: ProfileCardProps) => {
     <Card className="card-hover">
       <CardHeader className="text-center">
         <div className="flex flex-col items-center">
-          <Avatar className="w-20 h-20">
-            <AvatarImage src={profile.avatar || "/placeholder.svg"} alt={profile.name} />
-            <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
-          </Avatar>
+          <UserAvatar
+            avatarUrl={profile.avatar}
+            name={profile.name}
+            className="w-20 h-20"
+          />
           <h3 className="font-medium text-lg mt-2">{profile.name}</h3>
           <p className="text-sm text-gray-500">{profile.location}</p>
         </div>

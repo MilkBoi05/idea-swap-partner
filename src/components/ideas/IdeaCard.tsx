@@ -1,8 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Star, Users } from "lucide-react";
 import SkillTag from "../skills/SkillTag";
+import UserAvatar from "../profiles/UserAvatar";
 import IdeaDetailModal from "./IdeaDetailModal";
 import { Idea } from "@/hooks/useIdeas";
 
@@ -48,10 +50,10 @@ const IdeaCard = ({ idea }: IdeaCardProps) => {
         <CardHeader className="pb-2">
           <div className="flex justify-between items-start">
             <div className="flex items-center space-x-2">
-              <img 
-                src={currentIdea.author.avatar || "/placeholder.svg"} 
-                alt={currentIdea.author.name} 
-                className="w-10 h-10 rounded-full object-cover" 
+              <UserAvatar
+                avatarUrl={currentIdea.author.avatar}
+                name={currentIdea.author.name}
+                className="w-10 h-10"
               />
               <div>
                 <p className="text-sm font-medium">{currentIdea.author.name}</p>
