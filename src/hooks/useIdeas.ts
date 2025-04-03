@@ -130,13 +130,15 @@ export const useIdeas = () => {
         }
       }
       
-      // Fetch comments for all ideas
+      // Fetch comments for all ideas at once for efficiency
       const { data: commentsData, error: commentsError } = await supabase
         .from('comments')
         .select('*')
         .order('created_at', { ascending: true });
       
       if (commentsError) throw commentsError;
+      
+      console.log("All comments data:", commentsData);
       
       // Create a map of comments by idea ID
       const commentsMap = new Map();
@@ -169,6 +171,10 @@ export const useIdeas = () => {
         const author = profilesMap.get(idea.author_id);
         console.log(`Author for idea ${idea.id}:`, author);
         
+        // Ensure comments array is populated for this idea
+        const ideaComments = commentsMap.get(idea.id) || [];
+        console.log(`Idea ${idea.id} has ${ideaComments.length} comments`);
+        
         return {
           id: idea.id,
           title: idea.title,
@@ -180,7 +186,7 @@ export const useIdeas = () => {
           },
           skills: idea.skills || [],
           collaborators: collaboratorsMap?.get(idea.id) || [],
-          comments: commentsMap?.get(idea.id) || [],
+          comments: ideaComments,
           likes: idea.likes || 0,
           createdAt: idea.created_at,
           coverImage: idea.cover_image,
@@ -190,7 +196,7 @@ export const useIdeas = () => {
       }) : [];
       
       // Log transformed ideas for debugging
-      console.log("Transformed ideas with authors:", transformedIdeas);
+      console.log("Transformed ideas with authors and comment counts:", transformedIdeas);
       
       setIdeas(transformedIdeas);
       setUserIdeas(transformedIdeas.filter(idea => idea.author.id === userId));
