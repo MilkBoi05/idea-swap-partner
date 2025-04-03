@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -28,20 +27,6 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
   const { addComment } = useIdeas();
   const [comments, setComments] = useState<Comment[]>(idea.comments || []);
   const navigate = useNavigate();
-  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Handle navigation after modal is closed completely
-    if (!isOpen && pendingNavigation) {
-      const timer = setTimeout(() => {
-        console.log("Navigating to:", pendingNavigation);
-        navigate(pendingNavigation);
-        setPendingNavigation(null);
-      }, 300); // Increased delay to ensure modal is fully closed
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen, pendingNavigation, navigate]);
 
   const toggleLike = () => {
     if (isLiked) {
@@ -67,7 +52,6 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
     }
     
     if (newComment.trim()) {
-      // Create comment data with required author property
       const commentData = {
         text: newComment,
         ideaId: idea.id,
@@ -78,14 +62,10 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
         }
       };
       
-      // Add comment using the hook
       const savedComment = await addComment(commentData);
       
       if (savedComment) {
-        // Update local state with the new comment
         setComments([...comments, savedComment]);
-        
-        // Clear input
         setNewComment("");
       }
     }
@@ -95,7 +75,9 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
     if (!isAuthenticated) {
       toast.error("Please sign in to message");
       onClose();
-      setPendingNavigation("/sign-in");
+      setTimeout(() => {
+        navigate("/sign-in");
+      }, 0);
       return;
     }
     
@@ -105,18 +87,13 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
       return;
     }
     
-    // Create the message path and force navigation after modal closes
-    console.log("Setting up navigation to message", idea.author.name);
     const messagePath = `/messages?authorId=${idea.author.id}&authorName=${encodeURIComponent(idea.author.name)}`;
     
-    // First close the modal
     onClose();
-    
-    // Then set up navigation with a direct timeout to ensure it happens
     setTimeout(() => {
-      console.log("Direct navigation to:", messagePath);
-      navigate(messagePath);
-    }, 400);
+      console.log("Navigating to messages page now:", messagePath);
+      navigate(messagePath, { replace: true });
+    }, 0);
   };
 
   return (
@@ -217,8 +194,8 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
                 <Button variant="outline" size="sm">Apply to Collaborate</Button>
               )}
               {!idea.isOwner && (
-                <Button 
-                  onClick={handleMessageAuthor} 
+                <Button
+                  onClick={handleMessageAuthor}
                   size="sm"
                 >
                   Message {idea.author.name.split(" ")[0]}
