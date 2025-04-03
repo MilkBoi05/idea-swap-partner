@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -104,7 +105,7 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
             <div className="flex items-center space-x-3">
               <Avatar className="h-12 w-12">
                 <AvatarImage src={idea.author.avatar} alt={idea.author.name} />
-                <AvatarFallback>{idea.author.name.charAt(0)}</AvatarFallback>
+                <AvatarFallback>{idea.author.name.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div>
                 <p className="font-medium">{idea.author.name}</p>
@@ -136,8 +137,8 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
                   <div key={comment.id} className="bg-muted/50 p-3 rounded-md">
                     <div className="flex items-center space-x-2 mb-1">
                       <Avatar className="h-6 w-6">
-                        <AvatarImage src={comment.author.avatar} />
-                        <AvatarFallback>{comment.author.name.charAt(0)}</AvatarFallback>
+                        <AvatarImage src={comment.author.avatar} alt={comment.author.name} />
+                        <AvatarFallback>{comment.author.name.charAt(0).toUpperCase()}</AvatarFallback>
                       </Avatar>
                       <span className="text-sm font-medium">{comment.author.name}</span>
                       <span className="text-xs text-muted-foreground">

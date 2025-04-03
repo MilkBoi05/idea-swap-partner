@@ -2,6 +2,8 @@
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import SkillTag from "../skills/SkillTag";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Link } from "react-router-dom";
 
 export type Profile = {
   id: string;
@@ -23,12 +25,11 @@ const ProfileCard = ({ profile }: ProfileCardProps) => {
     <Card className="card-hover">
       <CardHeader className="text-center">
         <div className="flex flex-col items-center">
-          <img
-            src={profile.avatar || "/placeholder.svg"}
-            alt={profile.name}
-            className="w-20 h-20 rounded-full object-cover mb-2"
-          />
-          <h3 className="font-medium text-lg">{profile.name}</h3>
+          <Avatar className="w-20 h-20">
+            <AvatarImage src={profile.avatar || "/placeholder.svg"} alt={profile.name} />
+            <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
+          </Avatar>
+          <h3 className="font-medium text-lg mt-2">{profile.name}</h3>
           <p className="text-sm text-gray-500">{profile.location}</p>
         </div>
       </CardHeader>
@@ -49,7 +50,9 @@ const ProfileCard = ({ profile }: ProfileCardProps) => {
         </div>
       </CardContent>
       <CardFooter>
-        <Button className="w-full">View Profile</Button>
+        <Button asChild className="w-full">
+          <Link to={`/user/${profile.id}`}>View Profile</Link>
+        </Button>
       </CardFooter>
     </Card>
   );
