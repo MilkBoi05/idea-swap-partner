@@ -1,22 +1,15 @@
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { MessageSquare, Star, Send, MoreVertical } from "lucide-react";
 import SkillTag from "@/components/skills/SkillTag";
 import UserAvatar from "@/components/profiles/UserAvatar";
 import { Idea, Comment, useIdeas } from "@/hooks/useIdeas";
 import { format } from "date-fns";
-import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger
-} from "@/components/ui/context-menu";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import CommentsSection from "@/components/comments/CommentsSection";
+import IdeaActions from "./IdeaActions";
 
 type IdeaDetailModalProps = {
   idea: Idea;
@@ -28,7 +21,6 @@ type IdeaDetailModalProps = {
 const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailModalProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(idea.likes);
-  const [newComment, setNewComment] = useState("");
   const { userName, userId, isAuthenticated } = useAuth();
   const { addComment, deleteComment } = useIdeas();
   const [comments, setComments] = useState<Comment[]>(idea.comments || []);
@@ -51,15 +43,15 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
     }
   };
 
-  const handleAddComment = async () => {
+  const handleAddComment = async (text: string) => {
     if (!isAuthenticated) {
       toast.error("Please sign in to comment");
       return;
     }
     
-    if (newComment.trim()) {
+    if (text.trim()) {
       const commentData = {
-        text: newComment,
+        text: text,
         ideaId: idea.id,
         author: {
           id: userId || "anonymous",
@@ -72,7 +64,6 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
       
       if (savedComment) {
         setComments([...comments, savedComment]);
-        setNewComment("");
       }
     }
   };
@@ -139,118 +130,24 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
             </div>
           </div>
           
-          <div>
-            <h4 className="text-sm font-medium mb-2">Comments:</h4>
-            {comments.length > 0 ? (
-              <div className="space-y-3 max-h-60 overflow-y-auto">
-                {comments.map((comment) => (
-                  comment.author.id === userId ? (
-                    <ContextMenu key={comment.id}>
-                      <ContextMenuTrigger>
-                        <div className="bg-muted/50 p-3 rounded-md relative">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <UserAvatar
-                              avatarUrl={comment.author.avatar}
-                              name={comment.author.name}
-                              className="h-6 w-6"
-                            />
-                            <span className="text-sm font-medium">{comment.author.name}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {formatDate(comment.createdAt)}
-                            </span>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 px-2 ml-auto absolute right-2 top-3"
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          <p className="text-sm">{comment.text}</p>
-                        </div>
-                      </ContextMenuTrigger>
-                      <ContextMenuContent className="w-48">
-                        <ContextMenuItem 
-                          className="text-red-600 cursor-pointer"
-                          onClick={() => handleDeleteComment(comment.id)}
-                        >
-                          Delete Comment
-                        </ContextMenuItem>
-                      </ContextMenuContent>
-                    </ContextMenu>
-                  ) : (
-                    <div key={comment.id} className="bg-muted/50 p-3 rounded-md">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <UserAvatar
-                          avatarUrl={comment.author.avatar}
-                          name={comment.author.name}
-                          className="h-6 w-6"
-                        />
-                        <span className="text-sm font-medium">{comment.author.name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {formatDate(comment.createdAt)}
-                        </span>
-                      </div>
-                      <p className="text-sm">{comment.text}</p>
-                    </div>
-                  )
-                ))}
-              </div>
-            ) : (
-              <div className="bg-muted/50 p-4 rounded-md">
-                <p className="text-sm text-muted-foreground">No comments yet. Be the first to comment!</p>
-              </div>
-            )}
-            
-            <div className="mt-4 flex gap-2">
-              <Textarea 
-                placeholder="Add a comment..."
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                className="min-h-[60px]"
-              />
-              <Button 
-                onClick={handleAddComment} 
-                className="self-end"
-                disabled={!newComment.trim() || !isAuthenticated}
-              >
-                <Send size={16} />
-              </Button>
-            </div>
-          </div>
+          <CommentsSection 
+            comments={comments}
+            userId={userId}
+            ideaId={idea.id}
+            isAuthenticated={isAuthenticated}
+            onAddComment={handleAddComment}
+            onDeleteComment={handleDeleteComment}
+          />
           
-          <div className="flex items-center justify-between pt-4 border-t">
-            <div className="flex space-x-2">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="flex items-center gap-1"
-                onClick={toggleLike}
-              >
-                <Star size={16} className={isLiked ? "fill-yellow-400 text-yellow-400" : ""} />
-                <span>{likeCount}</span>
-              </Button>
-              <Button variant="ghost" size="sm" className="flex items-center gap-1">
-                <MessageSquare size={16} />
-                <span>{comments.length}</span>
-              </Button>
-            </div>
-            <div className="flex gap-2">
-              {idea.isOwner ? (
-                <Button variant="outline" size="sm">Edit Idea</Button>
-              ) : (
-                <Button variant="outline" size="sm">Apply to Collaborate</Button>
-              )}
-              {!idea.isOwner && (
-                <Button
-                  onClick={handleMessageAuthor}
-                  size="sm"
-                >
-                  Message {idea.author.name.split(" ")[0]}
-                </Button>
-              )}
-            </div>
-          </div>
+          <IdeaActions 
+            isLiked={isLiked}
+            likeCount={likeCount}
+            commentCount={comments.length}
+            isOwner={idea.isOwner || false}
+            authorName={idea.author.name}
+            onToggleLike={toggleLike}
+            onMessageAuthor={handleMessageAuthor}
+          />
         </div>
       </DialogContent>
     </Dialog>
