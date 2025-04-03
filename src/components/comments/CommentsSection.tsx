@@ -38,6 +38,15 @@ const CommentsSection = ({
     }
   };
 
+  const handleDeleteComment = async (commentId: string) => {
+    if (!isAuthenticated) {
+      toast.error("Please sign in to delete comments");
+      return;
+    }
+    
+    await onDeleteComment(commentId);
+  };
+
   return (
     <div>
       <h4 className="text-sm font-medium mb-2">Comments:</h4>
@@ -48,7 +57,7 @@ const CommentsSection = ({
               key={comment.id}
               comment={comment}
               userId={userId}
-              onDeleteComment={onDeleteComment}
+              onDeleteComment={handleDeleteComment}
             />
           ))}
         </div>
