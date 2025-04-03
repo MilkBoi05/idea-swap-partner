@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
@@ -34,6 +33,7 @@ const Profile = () => {
   
   const [editMode, setEditMode] = useState(false);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
   const [profileForm, setProfileForm] = useState({
     name: "",
     title: "",
@@ -113,6 +113,7 @@ const Profile = () => {
     if (!userId) return;
     
     try {
+      setIsSaving(true);
       await updateUserProfile(userId, {
         name: profileForm.name,
         title: profileForm.title,
@@ -131,6 +132,8 @@ const Profile = () => {
     } catch (error) {
       console.error("Error updating profile:", error);
       toast.error("Failed to update profile");
+    } finally {
+      setIsSaving(false); // Make sure to reset the loading state
     }
   };
   
@@ -241,8 +244,8 @@ const Profile = () => {
                     <Button variant="ghost" onClick={() => setEditMode(false)}>
                       Cancel
                     </Button>
-                    <Button onClick={handleSaveProfile} disabled={loading}>
-                      {loading ? "Saving..." : "Save Profile"}
+                    <Button onClick={handleSaveProfile} disabled={isSaving}>
+                      {isSaving ? "Saving..." : "Save Profile"}
                     </Button>
                   </div>
                 ) : (
