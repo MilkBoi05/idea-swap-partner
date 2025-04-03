@@ -370,14 +370,6 @@ export const useIdeas = () => {
       return false;
     }
   };
-      
-      return newComment;
-    } catch (error: any) {
-      console.error("Error adding comment:", error);
-      toast.error(error.message || "Failed to add comment");
-      return null;
-    }
-  };
 
   // Create a new idea
   const createIdea = async (idea: Omit<Idea, 'id' | 'author' | 'collaborators' | 'comments' | 'likes' | 'createdAt' | 'isOwner' | 'isSaved' | 'coverImage'>) => {
