@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -74,6 +75,14 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
     }
   };
 
+  const handleMessageAuthor = () => {
+    if (onMessageAuthor) {
+      onMessageAuthor();
+    } else {
+      toast.info(`Messaging ${idea.author.name} is not available yet`);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-3xl">
@@ -106,18 +115,6 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
             <div className="flex flex-wrap gap-2">
               {idea.skills.map((skill, index) => (
                 <SkillTag key={index} name={skill} />
-              ))}
-            </div>
-          </div>
-          
-          <div>
-            <h4 className="text-sm font-medium mb-2">Current collaborators:</h4>
-            <div className="flex -space-x-2 overflow-hidden">
-              {idea.collaborators.map((collaborator, i) => (
-                <Avatar key={i} className="border-2 border-background">
-                  <AvatarImage src={collaborator.avatar || `/placeholder.svg`} />
-                  <AvatarFallback>{collaborator.name.charAt(0)}</AvatarFallback>
-                </Avatar>
               ))}
             </div>
           </div>
@@ -188,7 +185,7 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
                 <Button variant="outline" size="sm">Apply to Collaborate</Button>
               )}
               {!idea.isOwner && (
-                <Button onClick={onMessageAuthor} size="sm">
+                <Button onClick={handleMessageAuthor} size="sm">
                   Message {idea.author.name.split(" ")[0]}
                 </Button>
               )}
