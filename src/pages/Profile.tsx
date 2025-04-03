@@ -83,6 +83,7 @@ const Profile = () => {
   }, [userId, getUserProfile, userEmail]);
 
   const handleProfileChange = (field: string, value: string) => {
+    console.log("Updating field:", field, "with value:", value);
     setProfileForm(prev => ({
       ...prev,
       [field]: value
@@ -264,7 +265,7 @@ const Profile = () => {
                     <Input
                       id="title"
                       value={profileForm.title}
-                      onChange={(e) => setProfileForm(prev => ({ ...prev, title: e.target.value }))}
+                      onChange={(e) => handleProfileChange('title', e.target.value)}
                       className="text-sm text-gray-500 mb-1 w-72"
                       placeholder="Your professional title"
                     />
@@ -275,7 +276,7 @@ const Profile = () => {
                   {editMode ? (
                     <Input
                       value={profileForm.location}
-                      onChange={(e) => setProfileForm(prev => ({ ...prev, location: e.target.value }))}
+                      onChange={(e) => handleProfileChange('location', e.target.value)}
                       className="text-sm text-gray-500 w-72"
                       placeholder="Your location"
                     />
