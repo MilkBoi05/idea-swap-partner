@@ -29,7 +29,9 @@ const CommentItem = ({ comment, userId, onDeleteComment }: CommentItemProps) => 
   const handleDeleteComment = async () => {
     try {
       setIsDeleting(true);
+      console.log(`Attempting to delete comment: ${comment.id}`);
       await onDeleteComment(comment.id);
+      console.log(`Comment ${comment.id} deletion requested`);
     } catch (error) {
       console.error("Error in CommentItem delete:", error);
     } finally {

@@ -74,10 +74,16 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
       return;
     }
     
+    console.log(`IdeaDetailModal: Deleting comment ${commentId} for idea ${idea.id}`);
     const success = await deleteComment(commentId, idea.id);
+    
     if (success) {
+      console.log(`IdeaDetailModal: Comment deletion successful, updating UI`);
       setComments(comments.filter(c => c.id !== commentId));
       toast.success("Comment deleted successfully");
+    } else {
+      console.error(`IdeaDetailModal: Failed to delete comment ${commentId}`);
+      toast.error("Failed to delete comment");
     }
   };
 

@@ -25,6 +25,7 @@ const CommentsSection = ({
   onDeleteComment
 }: CommentsSectionProps) => {
   const [newComment, setNewComment] = useState("");
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
 
   const handleAddComment = async () => {
     if (!isAuthenticated) {
@@ -45,11 +46,16 @@ const CommentsSection = ({
     }
     
     try {
+      console.log(`CommentsSection: Deleting comment ${commentId}`);
+      setDeletingCommentId(commentId);
       await onDeleteComment(commentId);
+      console.log(`CommentsSection: Comment ${commentId} deleted successfully`);
       toast.success("Comment deleted successfully");
     } catch (error) {
       console.error("Error deleting comment:", error);
       toast.error("Failed to delete comment");
+    } finally {
+      setDeletingCommentId(null);
     }
   };
 
