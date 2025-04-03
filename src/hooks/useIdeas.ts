@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -340,12 +341,38 @@ export const useIdeas = () => {
     }
     
     try {
+      console.log(`useIdeas: Starting database delete for comment ${commentId}`);
+      
+      // First, verify the comment exists and belongs to the current user
+      const { data: commentData, error: fetchError } = await supabase
+        .from('comments')
+        .select('*')
+        .eq('id', commentId)
+        .single();
+      
+      if (fetchError) {
+        console.error("Error fetching comment:", fetchError);
+        return false;
+      }
+      
+      if (commentData.author_id !== userId) {
+        console.error("User doesn't have permission to delete this comment");
+        toast.error("You can only delete your own comments");
+        return false;
+      }
+      
+      // Delete the comment from the database
       const { error } = await supabase
         .from('comments')
         .delete()
-        .match({ id: commentId });
+        .eq('id', commentId);
       
-      if (error) throw error;
+      if (error) {
+        console.error("Database error when deleting comment:", error);
+        throw error;
+      }
+      
+      console.log(`useIdeas: Database delete successful for comment ${commentId}`);
       
       // Update local state
       const updatedIdeas = ideas.map(idea => {
@@ -362,7 +389,6 @@ export const useIdeas = () => {
       setUserIdeas(updatedIdeas.filter(idea => idea.author.id === userId));
       setSavedIdeas(updatedIdeas.filter(idea => idea.isSaved));
       
-      toast.success("Comment deleted successfully");
       return true;
     } catch (error: any) {
       console.error("Error deleting comment:", error);
@@ -441,5 +467,6 @@ export const useIdeas = () => {
     addComment,
     createIdea,
     refreshIdeas: fetchIdeas,
+    deleteComment,
   };
 };

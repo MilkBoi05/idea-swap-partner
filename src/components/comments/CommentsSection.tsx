@@ -46,11 +46,13 @@ const CommentsSection = ({
     }
     
     try {
-      console.log(`CommentsSection: Deleting comment ${commentId}`);
+      console.log(`CommentsSection: Handling delete for comment ${commentId}`);
       setDeletingCommentId(commentId);
+      
+      // Call the parent's onDeleteComment directly
       await onDeleteComment(commentId);
-      console.log(`CommentsSection: Comment ${commentId} deleted successfully`);
-      toast.success("Comment deleted successfully");
+      
+      console.log(`CommentsSection: Delete request completed for ${commentId}`);
     } catch (error) {
       console.error("Error deleting comment:", error);
       toast.error("Failed to delete comment");

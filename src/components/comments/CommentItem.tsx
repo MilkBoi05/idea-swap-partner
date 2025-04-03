@@ -26,12 +26,17 @@ const CommentItem = ({ comment, userId, onDeleteComment }: CommentItemProps) => 
     }
   };
 
-  const handleDeleteComment = async () => {
+  const handleDeleteComment = async (e: React.MouseEvent) => {
     try {
+      e.preventDefault();
+      e.stopPropagation();
+      
       setIsDeleting(true);
-      console.log(`Attempting to delete comment: ${comment.id}`);
+      console.log(`CommentItem: Starting delete for comment ID ${comment.id}`);
+      
       await onDeleteComment(comment.id);
-      console.log(`Comment ${comment.id} deletion requested`);
+      
+      console.log(`CommentItem: Delete function has been called for comment ${comment.id}`);
     } catch (error) {
       console.error("Error in CommentItem delete:", error);
     } finally {
