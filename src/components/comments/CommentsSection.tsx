@@ -44,7 +44,13 @@ const CommentsSection = ({
       return;
     }
     
-    await onDeleteComment(commentId);
+    try {
+      await onDeleteComment(commentId);
+      toast.success("Comment deleted successfully");
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      toast.error("Failed to delete comment");
+    }
   };
 
   return (

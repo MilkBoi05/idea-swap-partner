@@ -5,12 +5,6 @@ import { MoreVertical, Trash2 } from "lucide-react";
 import UserAvatar from "@/components/profiles/UserAvatar";
 import { format } from "date-fns";
 import { Comment } from "@/hooks/useIdeas";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger
-} from "@/components/ui/context-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 type CommentItemProps = {
@@ -21,6 +15,7 @@ type CommentItemProps = {
 
 const CommentItem = ({ comment, userId, onDeleteComment }: CommentItemProps) => {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const isAuthor = comment.author.id === userId;
 
   const formatDate = (dateString: string) => {
@@ -32,8 +27,15 @@ const CommentItem = ({ comment, userId, onDeleteComment }: CommentItemProps) => 
   };
 
   const handleDeleteComment = async () => {
-    await onDeleteComment(comment.id);
-    setIsPopoverOpen(false);
+    try {
+      setIsDeleting(true);
+      await onDeleteComment(comment.id);
+    } catch (error) {
+      console.error("Error in CommentItem delete:", error);
+    } finally {
+      setIsDeleting(false);
+      setIsPopoverOpen(false);
+    }
   };
 
   return (
@@ -66,9 +68,10 @@ const CommentItem = ({ comment, userId, onDeleteComment }: CommentItemProps) => 
                 size="sm" 
                 className="w-full justify-start text-red-600"
                 onClick={handleDeleteComment}
+                disabled={isDeleting}
               >
                 <Trash2 className="h-4 w-4 mr-2" />
-                Delete Comment
+                {isDeleting ? "Deleting..." : "Delete Comment"}
               </Button>
             </PopoverContent>
           </Popover>
