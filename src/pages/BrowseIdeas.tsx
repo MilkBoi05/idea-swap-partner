@@ -120,7 +120,14 @@ const BrowseIdeas = () => {
             ) : filteredIdeas.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredIdeas.map((idea) => (
-                  <IdeaCard key={idea.id} idea={idea} />
+                  <IdeaCard 
+                    key={idea.id} 
+                    idea={{
+                      ...idea,
+                      // Ensure comments is always an array
+                      comments: Array.isArray(idea.comments) ? idea.comments : []
+                    }} 
+                  />
                 ))}
               </div>
             ) : (

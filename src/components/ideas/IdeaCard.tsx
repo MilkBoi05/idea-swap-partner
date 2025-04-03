@@ -22,7 +22,10 @@ const IdeaCard = ({
   const [likeCount, setLikeCount] = useState(idea.likes);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [currentIdea, setCurrentIdea] = useState<Idea>(idea);
-  const [commentCount, setCommentCount] = useState(Array.isArray(idea.comments) ? idea.comments.length : 0);
+  // Initialize comment count directly from the idea.comments array length
+  const [commentCount, setCommentCount] = useState(
+    Array.isArray(idea.comments) ? idea.comments.length : 0
+  );
   
   const {
     userId
@@ -31,8 +34,10 @@ const IdeaCard = ({
     refreshIdeas
   } = useIdeas();
 
+  // Update local state when idea prop changes
   useEffect(() => {
     setCurrentIdea(idea);
+    // Also update comment count when idea changes
     setCommentCount(Array.isArray(idea.comments) ? idea.comments.length : 0);
   }, [idea]);
 
