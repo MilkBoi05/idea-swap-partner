@@ -82,19 +82,10 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
       return;
     }
     
-    if (onMessageAuthor) {
-      onMessageAuthor();
-      onClose();
-      return;
-    }
-    
     const messagePath = `/messages?authorId=${idea.author.id}&authorName=${encodeURIComponent(idea.author.name)}`;
     
     onClose();
-    setTimeout(() => {
-      console.log("Navigating to messages page now:", messagePath);
-      navigate(messagePath, { replace: true });
-    }, 0);
+    navigate(messagePath, { replace: true });
   };
 
   return (
