@@ -31,7 +31,7 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
   const [likeCount, setLikeCount] = useState(idea.likes);
   const [newComment, setNewComment] = useState("");
   const { userName, userId, isAuthenticated } = useAuth();
-  const { addComment } = useIdeas();
+  const { addComment, deleteComment } = useIdeas();
   const [comments, setComments] = useState<Comment[]>(idea.comments || []);
   const navigate = useNavigate();
 
@@ -140,9 +140,6 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
                         className="h-6 w-6"
                       />
                       <span className="text-sm font-medium">{comment.author.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {formatDate(comment.createdAt)}
-                      </span>
                       <span className="text-xs text-muted-foreground">
                         {formatDate(comment.createdAt)}
                       </span>
