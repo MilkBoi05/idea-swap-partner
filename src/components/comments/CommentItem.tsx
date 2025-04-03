@@ -10,12 +10,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 type CommentItemProps = {
   comment: Comment;
   userId?: string | null;
-  onDeleteComment: (commentId: string) => Promise<void>;
+  onDeleteComment: (commentId: string) => void;
 };
 
 const CommentItem = ({ comment, userId, onDeleteComment }: CommentItemProps) => {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const isAuthor = comment.author.id === userId;
 
   const formatDate = (dateString: string) => {
@@ -26,23 +25,12 @@ const CommentItem = ({ comment, userId, onDeleteComment }: CommentItemProps) => 
     }
   };
 
-  const handleDeleteComment = async (e: React.MouseEvent) => {
-    try {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      setIsDeleting(true);
-      console.log(`CommentItem: Starting delete for comment ID ${comment.id}`);
-      
-      await onDeleteComment(comment.id);
-      
-      console.log(`CommentItem: Delete function has been called for comment ${comment.id}`);
-    } catch (error) {
-      console.error("Error in CommentItem delete:", error);
-    } finally {
-      setIsDeleting(false);
-      setIsPopoverOpen(false);
-    }
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log(`CommentItem: Delete button clicked for comment ${comment.id}`);
+    onDeleteComment(comment.id);
+    setIsPopoverOpen(false);
   };
 
   return (
@@ -74,11 +62,10 @@ const CommentItem = ({ comment, userId, onDeleteComment }: CommentItemProps) => 
                 variant="ghost" 
                 size="sm" 
                 className="w-full justify-start text-red-600"
-                onClick={handleDeleteComment}
-                disabled={isDeleting}
+                onClick={handleDeleteClick}
               >
                 <Trash2 className="h-4 w-4 mr-2" />
-                {isDeleting ? "Deleting..." : "Delete Comment"}
+                Delete Comment
               </Button>
             </PopoverContent>
           </Popover>

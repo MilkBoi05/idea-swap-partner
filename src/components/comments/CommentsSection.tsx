@@ -25,7 +25,9 @@ const CommentsSection = ({
   onDeleteComment
 }: CommentsSectionProps) => {
   const [newComment, setNewComment] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
+  const [displayedComments, setDisplayedComments] = useState<Comment[]>(comments);
 
   const handleAddComment = async () => {
     if (!isAuthenticated) {
@@ -34,8 +36,16 @@ const CommentsSection = ({
     }
     
     if (newComment.trim()) {
-      await onAddComment(newComment);
-      setNewComment("");
+      setIsSubmitting(true);
+      try {
+        await onAddComment(newComment);
+        setNewComment("");
+      } catch (error) {
+        console.error("Error adding comment:", error);
+        toast.error("Failed to add comment");
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -46,27 +56,38 @@ const CommentsSection = ({
     }
     
     try {
-      console.log(`CommentsSection: Handling delete for comment ${commentId}`);
       setDeletingCommentId(commentId);
+      console.log(`CommentsSection: Deleting comment ${commentId}`);
       
-      // Call the parent's onDeleteComment directly
+      // Update UI immediately for better UX
+      setDisplayedComments(displayedComments.filter(c => c.id !== commentId));
+      
+      // Actually delete from database
       await onDeleteComment(commentId);
       
-      console.log(`CommentsSection: Delete request completed for ${commentId}`);
+      toast.success("Comment deleted successfully");
     } catch (error) {
       console.error("Error deleting comment:", error);
       toast.error("Failed to delete comment");
+      
+      // Restore the comment in the UI if deletion fails
+      setDisplayedComments(comments);
     } finally {
       setDeletingCommentId(null);
     }
   };
 
+  // Update displayed comments when props change
+  if (JSON.stringify(comments) !== JSON.stringify(displayedComments)) {
+    setDisplayedComments(comments);
+  }
+
   return (
     <div>
       <h4 className="text-sm font-medium mb-2">Comments:</h4>
-      {comments.length > 0 ? (
+      {displayedComments.length > 0 ? (
         <div className="space-y-3 max-h-60 overflow-y-auto">
-          {comments.map((comment) => (
+          {displayedComments.map((comment) => (
             <CommentItem
               key={comment.id}
               comment={comment}
@@ -91,7 +112,7 @@ const CommentsSection = ({
         <Button 
           onClick={handleAddComment} 
           className="self-end"
-          disabled={!newComment.trim() || !isAuthenticated}
+          disabled={!newComment.trim() || !isAuthenticated || isSubmitting}
         >
           <Send size={16} />
         </Button>
