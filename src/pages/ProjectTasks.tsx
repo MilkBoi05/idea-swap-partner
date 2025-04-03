@@ -23,22 +23,51 @@ const ProjectTasks = () => {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState("board");
   
-  // Fetch project title
+  // Fetch project title - modified the query to handle the relationship properly
   const { data: project, isLoading } = useQuery({
     queryKey: ["project-title", id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First, fetch the idea data
+      const { data: ideaData, error: ideaError } = await supabase
         .from("ideas")
-        .select("title")
+        .select("title, author_id")
         .eq("id", id)
         .single();
 
-      if (error) {
-        console.error("Error fetching project:", error);
+      if (ideaError) {
+        console.error("Error fetching project:", ideaError);
         throw new Error("Failed to load project");
       }
-
-      return data;
+      
+      // Then, separately fetch the author's profile data
+      if (ideaData.author_id) {
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("name")
+          .eq("id", ideaData.author_id)
+          .single();
+          
+        if (profileError) {
+          console.error("Error fetching author profile:", profileError);
+          // Return just the idea data without author name if profile fetch fails
+          return {
+            title: ideaData.title,
+            authorName: "Unknown"
+          };
+        }
+        
+        // Return combined data
+        return {
+          title: ideaData.title,
+          authorName: profileData.name
+        };
+      }
+      
+      // Fallback if no author_id
+      return {
+        title: ideaData.title,
+        authorName: "Unknown"
+      };
     },
     enabled: !!id,
   });
