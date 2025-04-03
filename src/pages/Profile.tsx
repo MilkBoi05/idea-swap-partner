@@ -30,7 +30,7 @@ const Profile = () => {
   const { userId, userEmail } = useAuth();
   const { getUserProfile, updateUserProfile, loading: profileLoading } = useUserProfile();
   const { userIdeas, collaboratingIdeas, loading: ideasLoading } = useIdeas();
-  
+
   const [editMode, setEditMode] = useState(false);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -48,7 +48,7 @@ const Profile = () => {
   });
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
-  
+
   useEffect(() => {
     const loadProfile = async () => {
       if (userId) {
@@ -66,39 +66,39 @@ const Profile = () => {
             linkedin: profile.linkedin || "",
             profileImage: profile.profileImage || ""
           });
-          
+
           setSelectedSkills(profile.skills || []);
-          
+
           if (profile.profileImage) {
             setProfileImagePreview(profile.profileImage);
           }
         }
       }
     };
-    
+
     loadProfile();
   }, [userId, getUserProfile, userEmail]);
-  
+
   const handleProfileChange = (field: string, value: string) => {
     setProfileForm(prev => ({
       ...prev,
       [field]: value
     }));
   };
-  
+
   const handleProfileImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       console.log("Selected image file:", file.name, file.type, file.size);
-      
+
       // Validate file type
       if (!file.type.startsWith('image/')) {
         toast.error('Please select an image file');
         return;
       }
-      
+
       setProfileImage(file);
-      
+
       const reader = new FileReader();
       reader.onloadend = () => {
         const preview = reader.result as string;
@@ -112,7 +112,7 @@ const Profile = () => {
       reader.readAsDataURL(file);
     }
   };
-  
+
   const toggleSkill = (skill: string) => {
     if (selectedSkills.includes(skill)) {
       setSelectedSkills(selectedSkills.filter(s => s !== skill));
@@ -120,20 +120,20 @@ const Profile = () => {
       setSelectedSkills([...selectedSkills, skill]);
     }
   };
-  
+
   const handleSaveProfile = async () => {
     if (!userId) {
       toast.error("You must be logged in to update your profile");
       return;
     }
-    
+
     try {
       setIsSaving(true);
-      
+
       if (profileImage) {
         console.log("Uploading profile image:", profileImage.name);
       }
-      
+
       const result = await updateUserProfile(userId, {
         name: profileForm.name,
         title: profileForm.title,
@@ -146,7 +146,7 @@ const Profile = () => {
         linkedin: profileForm.linkedin,
         profileImage: profileImagePreview || profileForm.profileImage
       }, profileImage);
-      
+
       if (result) {
         setProfileForm(prev => ({
           ...prev,
@@ -160,15 +160,15 @@ const Profile = () => {
           linkedin: result.linkedin || prev.linkedin,
           profileImage: result.profileImage || prev.profileImage
         }));
-        
+
         if (result.profileImage && result.profileImage !== profileForm.profileImage) {
           console.log("Updated profile image URL:", result.profileImage);
           setProfileForm(prev => ({ ...prev, profileImage: result.profileImage }));
         }
-        
+
         setEditMode(false);
         setProfileImage(null); // Clear file selection after upload
-        
+
         setProfileImagePreview(null);
       }
     } catch (error) {
@@ -178,11 +178,11 @@ const Profile = () => {
       setIsSaving(false); // Always reset the saving state, whether successful or not
     }
   };
-  
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      
+
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 flex flex-col">
         <div className="mb-6 flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => navigate('/dashboard')} className="flex items-center gap-2">
@@ -256,22 +256,23 @@ const Profile = () => {
                   ) : (
                     <p className="text-xl font-bold text-gray-900">{profileForm.name || "Your Name"}</p>
                   )}
-                  
+
                   {editMode ? (
                     <Input
+                      id="title"
                       value={profileForm.title}
-                      onChange={(e) => handleProfileChange('title', e.target.value)}
+                      onChange={(e) => setProfileForm(prev => ({ ...prev, title: e.target.value }))}
                       className="text-sm text-gray-500 mb-1 w-72"
                       placeholder="Your professional title"
                     />
                   ) : (
                     <p className="text-sm text-gray-500">{profileForm.title || "Add your professional title"}</p>
                   )}
-                  
+
                   {editMode ? (
                     <Input
                       value={profileForm.location}
-                      onChange={(e) => handleProfileChange('location', e.target.value)}
+                      onChange={(e) => setProfileForm(prev => ({ ...prev, location: e.target.value }))}
                       className="text-sm text-gray-500 w-72"
                       placeholder="Your location"
                     />
@@ -316,7 +317,7 @@ const Profile = () => {
             </div>
           </div>
         </div>
-        
+
         <Tabs defaultValue="overview" className="flex-1">
           <TabsList className="mb-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -325,7 +326,7 @@ const Profile = () => {
             <TabsTrigger value="search">Search Users</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="overview">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="md:col-span-2">
@@ -345,7 +346,7 @@ const Profile = () => {
                     )}
                   </CardContent>
                 </Card>
-                
+
                 <Card className="mt-6">
                   <CardHeader>
                     <CardTitle>Skills</CardTitle>
@@ -389,7 +390,7 @@ const Profile = () => {
                   </CardContent>
                 </Card>
               </div>
-              
+
               <div>
                 <Card>
                   <CardHeader>
@@ -475,7 +476,7 @@ const Profile = () => {
                     )}
                   </CardContent>
                 </Card>
-                
+
                 <Card className="mt-6">
                   <CardHeader>
                     <CardTitle>Stats</CardTitle>
@@ -500,7 +501,7 @@ const Profile = () => {
               </div>
             </div>
           </TabsContent>
-          
+
           <TabsContent value="ideas">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {userIdeas.length > 0 ? (
@@ -518,7 +519,7 @@ const Profile = () => {
               )}
             </div>
           </TabsContent>
-          
+
           <TabsContent value="collaborating">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {collaboratingIdeas.length > 0 ? (
@@ -536,7 +537,7 @@ const Profile = () => {
               )}
             </div>
           </TabsContent>
-          
+
           <TabsContent value="search">
             <Card>
               <CardHeader>
@@ -547,7 +548,7 @@ const Profile = () => {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="settings">
             <Card>
               <CardHeader>
@@ -594,7 +595,7 @@ const Profile = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div>
                   <h3 className="font-medium mb-2">Password</h3>
                   <div className="space-y-4">
@@ -613,7 +614,7 @@ const Profile = () => {
                     <Button>Update Password</Button>
                   </div>
                 </div>
-                
+
                 <div>
                   <h3 className="font-medium mb-2">Account Actions</h3>
                   <div className="space-y-4">
