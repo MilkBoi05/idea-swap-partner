@@ -86,10 +86,17 @@ const Profile = () => {
     }));
   };
   
-  const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfileImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       console.log("Selected image file:", file.name, file.type, file.size);
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select an image file');
+        return;
+      }
+      
       setProfileImage(file);
       
       const reader = new FileReader();
@@ -97,6 +104,10 @@ const Profile = () => {
         const preview = reader.result as string;
         console.log("Preview image generated");
         setProfileImagePreview(preview);
+        setProfileForm(prev => ({
+          ...prev,
+          profileImage: preview
+        }));
       };
       reader.readAsDataURL(file);
     }
