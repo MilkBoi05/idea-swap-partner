@@ -16,9 +16,16 @@ type IdeaDetailModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onMessageAuthor?: () => void;
+  onCommentCountChange?: (count: number) => void;
 };
 
-const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailModalProps) => {
+const IdeaDetailModal = ({ 
+  idea, 
+  isOpen, 
+  onClose, 
+  onMessageAuthor,
+  onCommentCountChange 
+}: IdeaDetailModalProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(idea.likes);
   const { userName, userId, isAuthenticated } = useAuth();
@@ -32,6 +39,13 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
       setComments(idea.comments);
     }
   }, [isOpen, idea.comments]);
+
+  // Update comment count in parent component when comments change
+  useEffect(() => {
+    if (onCommentCountChange) {
+      onCommentCountChange(comments.length);
+    }
+  }, [comments.length, onCommentCountChange]);
 
   const toggleLike = () => {
     if (isLiked) {
@@ -79,11 +93,22 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
     console.log(`IdeaDetailModal: Deleting comment ${commentId} for idea ${idea.id}`);
     
     try {
+      // Optimistically remove from local state first for immediate UI update
+      setComments(prev => prev.filter(comment => comment.id !== commentId));
+      
+      // Then attempt to delete from database
       await deleteComment(commentId, idea.id);
       console.log("Delete operation completed");
       return Promise.resolve();
     } catch (error) {
       console.error("Error in handleDeleteComment:", error);
+      
+      // If deletion fails, restore the comment (this is unlikely to happen as we already filtered it out)
+      const deletedComment = idea.comments.find(comment => comment.id === commentId);
+      if (deletedComment) {
+        setComments(prev => [...prev, deletedComment]);
+      }
+      
       return Promise.reject(error);
     }
   };

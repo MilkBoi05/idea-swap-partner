@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,9 +10,11 @@ import { Idea, useIdeas } from "@/hooks/useIdeas";
 import { toast } from "sonner";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { useAuth } from "@/contexts/AuthContext";
+
 type IdeaCardProps = {
   idea: Idea;
 };
+
 const IdeaCard = ({
   idea
 }: IdeaCardProps) => {
@@ -19,15 +22,20 @@ const IdeaCard = ({
   const [likeCount, setLikeCount] = useState(idea.likes);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [currentIdea, setCurrentIdea] = useState<Idea>(idea);
+  const [commentCount, setCommentCount] = useState(Array.isArray(idea.comments) ? idea.comments.length : 0);
+  
   const {
     userId
   } = useAuth();
   const {
     refreshIdeas
   } = useIdeas();
+
   useEffect(() => {
     setCurrentIdea(idea);
+    setCommentCount(Array.isArray(idea.comments) ? idea.comments.length : 0);
   }, [idea]);
+
   const toggleLike = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click from triggering
     if (isLiked) {
@@ -37,13 +45,16 @@ const IdeaCard = ({
     }
     setIsLiked(!isLiked);
   };
+
   const handleMessageAuthor = () => {
     console.log(`Messaging ${currentIdea.author.name}`);
   };
+
   const handleCommentClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click from triggering
     setShowDetailModal(true);
   };
+
   const handleDeleteIdea = async (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click from triggering
 
@@ -60,8 +71,14 @@ const IdeaCard = ({
     }
   };
 
+  // Called when a comment is added or deleted in the modal
+  const handleCommentCountChange = (newCount: number) => {
+    setCommentCount(newCount);
+  };
+
   // Check if user is the owner of the idea
   const isOwner = currentIdea.author.id === userId;
+  
   return <ContextMenu>
       <ContextMenuTrigger>
         <Card className="card-hover cursor-pointer h-full flex flex-col" onClick={() => setShowDetailModal(true)}>
@@ -90,7 +107,7 @@ const IdeaCard = ({
               
               <div className="flex items-center cursor-pointer hover:text-gray-700" onClick={handleCommentClick}>
                 <MessageCircle size={16} className="mr-1" />
-                <span>{Array.isArray(currentIdea.comments) ? currentIdea.comments.length : 0}</span>
+                <span>{commentCount}</span>
               </div>
             </div>
             <div>
@@ -112,7 +129,14 @@ const IdeaCard = ({
         </ContextMenuItem>
       </ContextMenuContent>
       
-      <IdeaDetailModal idea={currentIdea} isOpen={showDetailModal} onClose={() => setShowDetailModal(false)} onMessageAuthor={handleMessageAuthor} />
+      <IdeaDetailModal 
+        idea={currentIdea} 
+        isOpen={showDetailModal} 
+        onClose={() => setShowDetailModal(false)} 
+        onMessageAuthor={handleMessageAuthor} 
+        onCommentCountChange={handleCommentCountChange}
+      />
     </ContextMenu>;
 };
+
 export default IdeaCard;

@@ -1,11 +1,9 @@
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { MoreVertical, Trash2 } from "lucide-react";
-import UserAvatar from "@/components/profiles/UserAvatar";
 import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
+import UserAvatar from "@/components/profiles/UserAvatar";
 import { Comment } from "@/hooks/useIdeas";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
 
 type CommentItemProps = {
@@ -15,7 +13,6 @@ type CommentItemProps = {
 };
 
 const CommentItem = ({ comment, userId, onDeleteComment }: CommentItemProps) => {
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const isAuthor = comment.author.id === userId;
 
   const formatDate = (dateString: string) => {
@@ -27,14 +24,10 @@ const CommentItem = ({ comment, userId, onDeleteComment }: CommentItemProps) => 
   };
 
   const handleDelete = () => {
-    // Close popover first for better UX
-    setIsPopoverOpen(false);
-    
     // Show immediate feedback
     toast.info("Deleting comment...");
     
     try {
-      // Call delete directly - no confirmation, just do it
       onDeleteComment(comment.id);
     } catch (err) {
       console.error("Failed to delete comment:", err);
@@ -57,12 +50,12 @@ const CommentItem = ({ comment, userId, onDeleteComment }: CommentItemProps) => 
         
         {isAuthor && (
           <div className="ml-auto absolute right-2 top-3">
-            {/* Changed to a direct button instead of popover for simplicity */}
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 w-6 p-0"
+              className="h-6 w-6 p-0 hover:bg-red-100 hover:text-red-600"
               onClick={handleDelete}
+              aria-label="Delete comment"
             >
               <Trash2 className="h-4 w-4 text-red-600" />
             </Button>

@@ -26,13 +26,7 @@ const CommentsSection = ({
 }: CommentsSectionProps) => {
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [localComments, setLocalComments] = useState<Comment[]>([]);
   
-  // Update local comments whenever prop comments change
-  useEffect(() => {
-    setLocalComments(comments);
-  }, [comments]);
-
   const handleAddComment = async () => {
     if (!isAuthenticated) {
       toast.error("Please sign in to comment");
@@ -60,28 +54,18 @@ const CommentsSection = ({
     }
     
     console.log(`CommentsSection: Handling delete for comment ${commentId}`);
-    
-    // Optimistically remove from local state immediately
-    setLocalComments(currentComments => 
-      currentComments.filter(c => c.id !== commentId)
-    );
-    
-    // Attempt to delete from database
     onDeleteComment(commentId).catch(error => {
       console.error("Error deleting comment:", error);
       toast.error("Failed to delete comment");
-      
-      // If deletion fails, restore the comments from props
-      setLocalComments(comments);
     });
   };
 
   return (
     <div>
       <h4 className="text-sm font-medium mb-2">Comments:</h4>
-      {localComments.length > 0 ? (
+      {comments.length > 0 ? (
         <div className="space-y-3 max-h-60 overflow-y-auto">
-          {localComments.map((comment) => (
+          {comments.map((comment) => (
             <CommentItem
               key={comment.id}
               comment={comment}
