@@ -46,6 +46,7 @@ const Profile = () => {
     linkedin: "",
     profileImage: ""
   });
+  const [hasChanges, setHasChanges] = useState(false);
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
 
@@ -88,6 +89,7 @@ const Profile = () => {
       ...prev,
       [field]: value
     }));
+    setHasChanges(true);
   };
 
   const handleProfileImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -173,8 +175,8 @@ const Profile = () => {
 
         setEditMode(false);
         setProfileImage(null); // Clear file selection after upload
-
         setProfileImagePreview(null);
+        setHasChanges(false);
       }
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -301,7 +303,7 @@ const Profile = () => {
                     </Button>
                     <Button 
                       onClick={handleSaveProfile} 
-                      disabled={isSaving || profileLoading}
+                      disabled={isSaving || profileLoading || !hasChanges}
                     >
                       {isSaving ? (
                         <>
