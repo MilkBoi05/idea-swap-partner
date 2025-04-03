@@ -25,11 +25,11 @@ const CommentItem = ({ comment, userId, onDeleteComment }: CommentItemProps) => 
     }
   };
 
-  const handleDeleteClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleDeleteClick = () => {
     console.log(`CommentItem: Delete button clicked for comment ${comment.id}`);
+    // Call the delete function directly
     onDeleteComment(comment.id);
+    // Close the popover immediately for better UX
     setIsPopoverOpen(false);
   };
 

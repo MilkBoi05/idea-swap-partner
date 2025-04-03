@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import SkillTag from "@/components/skills/SkillTag";
 import UserAvatar from "@/components/profiles/UserAvatar";
@@ -23,8 +23,15 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
   const [likeCount, setLikeCount] = useState(idea.likes);
   const { userName, userId, isAuthenticated } = useAuth();
   const { addComment, deleteComment } = useIdeas();
-  const [comments, setComments] = useState<Comment[]>(idea.comments || []);
+  const [comments, setComments] = useState<Comment[]>([]);
   const navigate = useNavigate();
+  
+  // Initialize comments from idea when the modal opens
+  useEffect(() => {
+    if (isOpen && idea.comments) {
+      setComments(idea.comments);
+    }
+  }, [isOpen, idea.comments]);
 
   const toggleLike = () => {
     if (isLiked) {
@@ -63,7 +70,7 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
       const savedComment = await addComment(commentData);
       
       if (savedComment) {
-        setComments([...comments, savedComment]);
+        setComments(prev => [...prev, savedComment]);
       }
     }
   };
@@ -74,24 +81,21 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
       return;
     }
     
+    console.log(`IdeaDetailModal: Deleting comment ${commentId} for idea ${idea.id}`);
+    
     try {
-      console.log(`IdeaDetailModal: Deleting comment ${commentId} for idea ${idea.id}`);
-      
-      // Call the deleteComment function directly from useIdeas
       const success = await deleteComment(commentId, idea.id);
       
       if (success) {
-        console.log(`IdeaDetailModal: Comment deletion successful, updating UI`);
-        // Update the local state to remove the deleted comment
-        setComments(comments.filter(c => c.id !== commentId));
-        toast.success("Comment deleted successfully");
+        console.log(`IdeaDetailModal: Comment deletion successful`);
+        // We don't need to update the state here as it's handled in CommentsSection
+        return Promise.resolve();
       } else {
         console.error(`IdeaDetailModal: Failed to delete comment ${commentId}`);
-        toast.error("Failed to delete comment");
+        return Promise.reject(new Error("Failed to delete comment"));
       }
     } catch (error) {
       console.error("Error deleting comment:", error);
-      toast.error("Failed to delete comment");
       return Promise.reject(error);
     }
   };

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,8 +26,12 @@ const CommentsSection = ({
 }: CommentsSectionProps) => {
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
-  const [displayedComments, setDisplayedComments] = useState<Comment[]>(comments);
+  const [localComments, setLocalComments] = useState<Comment[]>([]);
+  
+  // Update local comments whenever prop comments change
+  useEffect(() => {
+    setLocalComments(comments);
+  }, [comments]);
 
   const handleAddComment = async () => {
     if (!isAuthenticated) {
@@ -49,45 +53,40 @@ const CommentsSection = ({
     }
   };
 
-  const handleDeleteComment = async (commentId: string) => {
+  const handleDeleteComment = (commentId: string) => {
     if (!isAuthenticated) {
       toast.error("Please sign in to delete comments");
       return;
     }
     
-    try {
-      setDeletingCommentId(commentId);
-      console.log(`CommentsSection: Deleting comment ${commentId}`);
-      
-      // Update UI immediately for better UX
-      setDisplayedComments(displayedComments.filter(c => c.id !== commentId));
-      
-      // Actually delete from database
-      await onDeleteComment(commentId);
-      
-      toast.success("Comment deleted successfully");
-    } catch (error) {
-      console.error("Error deleting comment:", error);
-      toast.error("Failed to delete comment");
-      
-      // Restore the comment in the UI if deletion fails
-      setDisplayedComments(comments);
-    } finally {
-      setDeletingCommentId(null);
-    }
+    console.log(`CommentsSection: Handling delete for comment ${commentId}`);
+    
+    // Optimistically update UI
+    setLocalComments(currentComments => 
+      currentComments.filter(c => c.id !== commentId)
+    );
+    
+    // Show success toast
+    toast.promise(
+      onDeleteComment(commentId), 
+      {
+        loading: 'Deleting comment...',
+        success: 'Comment deleted',
+        error: (err) => {
+          // Restore the comment if deletion fails
+          setLocalComments(comments);
+          return 'Failed to delete comment';
+        },
+      }
+    );
   };
-
-  // Update displayed comments when props change
-  if (JSON.stringify(comments) !== JSON.stringify(displayedComments)) {
-    setDisplayedComments(comments);
-  }
 
   return (
     <div>
       <h4 className="text-sm font-medium mb-2">Comments:</h4>
-      {displayedComments.length > 0 ? (
+      {localComments.length > 0 ? (
         <div className="space-y-3 max-h-60 overflow-y-auto">
-          {displayedComments.map((comment) => (
+          {localComments.map((comment) => (
             <CommentItem
               key={comment.id}
               comment={comment}
