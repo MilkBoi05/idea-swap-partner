@@ -46,6 +46,7 @@ const Profile = () => {
     linkedin: "",
     profileImage: ""
   });
+  const [uploadedProfileImage, setUploadedProfileImage] = useState<File | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
@@ -111,19 +112,16 @@ const Profile = () => {
         return;
       }
 
-      setProfileImage(file);
+      setUploadedProfileImage(file);
 
       const reader = new FileReader();
       reader.onloadend = () => {
         const preview = reader.result as string;
         console.log("Preview image generated");
         setProfileImagePreview(preview);
-        setProfileForm(prev => ({
-          ...prev,
-          profileImage: preview
-        }));
       };
       reader.readAsDataURL(file);
+      setHasChanges(true);
     }
   };
 
@@ -155,8 +153,8 @@ const Profile = () => {
         github: profileForm.github,
         twitter: profileForm.twitter,
         linkedin: profileForm.linkedin,
-        profileImage: profileImagePreview || profileForm.profileImage
-      }, profileImage);
+        profileImage: profileForm.profileImage
+      }, uploadedProfileImage);
 
       if (!result) {
         throw new Error("Failed to update profile");
