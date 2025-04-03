@@ -78,16 +78,24 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
   };
 
   const handleMessageAuthor = () => {
+    if (!isAuthenticated) {
+      toast.error("Please sign in to message");
+      // Close the modal and navigate to sign in
+      onClose();
+      navigate("/sign-in");
+      return;
+    }
+    
     if (onMessageAuthor) {
       onMessageAuthor();
+      onClose(); // Also close the modal when using the callback
       return;
     }
     
     // Navigate to the Messages page with author information
+    console.log("Messaging", idea.author.name);
+    onClose(); // Close the modal before navigation
     navigate(`/messages?authorId=${idea.author.id}&authorName=${encodeURIComponent(idea.author.name)}`);
-    
-    // Close the modal
-    onClose();
   };
 
   return (
@@ -188,7 +196,11 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
                 <Button variant="outline" size="sm">Apply to Collaborate</Button>
               )}
               {!idea.isOwner && (
-                <Button onClick={handleMessageAuthor} size="sm">
+                <Button 
+                  onClick={handleMessageAuthor} 
+                  size="sm"
+                  type="button"
+                >
                   Message {idea.author.name.split(" ")[0]}
                 </Button>
               )}
