@@ -55,20 +55,19 @@ const Profile = () => {
       if (userId) {
         const profile = await getUserProfile(userId);
         if (profile) {
-          // Only set initial values if the form is empty
-          if (!profileForm.name && !profileForm.title && !profileForm.location) {
-            setProfileForm({
-              name: profile.name || "",
-              title: profile.title || "",
-              location: profile.location || "",
-              bio: profile.bio || "",
-              email: profile.email || userEmail || "",
-              website: profile.website || "",
-              github: profile.github || "",
-              twitter: profile.twitter || "",
-              linkedin: profile.linkedin || "",
-              profileImage: profile.profileImage || ""
-            });
+          // Only set initial values once
+          setProfileForm({
+            name: profile.name || "",
+            title: profile.title || "",
+            location: profile.location || "",
+            bio: profile.bio || "",
+            email: profile.email || userEmail || "",
+            website: profile.website || "",
+            github: profile.github || "",
+            twitter: profile.twitter || "",
+            linkedin: profile.linkedin || "",
+            profileImage: profile.profileImage || ""
+          });
 
             setSelectedSkills(profile.skills || []);
 
@@ -85,10 +84,14 @@ const Profile = () => {
 
   const handleProfileChange = (field: string, value: string) => {
     console.log("Updating field:", field, "with value:", value);
-    setProfileForm(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setProfileForm(prev => {
+      const newForm = {
+        ...prev,
+        [field]: value
+      };
+      console.log("New form state:", newForm);
+      return newForm;
+    });
     setHasChanges(true);
   };
 
