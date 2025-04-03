@@ -41,6 +41,9 @@ const IdeaCard = ({ idea }: IdeaCardProps) => {
     setShowDetailModal(true);
   };
 
+  // Debug the avatar URL
+  console.log(`Author avatar URL for ${currentIdea.author.name}:`, currentIdea.author.avatar);
+
   return (
     <>
       <Card 

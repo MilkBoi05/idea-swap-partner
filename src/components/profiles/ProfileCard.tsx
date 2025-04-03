@@ -21,6 +21,9 @@ type ProfileCardProps = {
 };
 
 const ProfileCard = ({ profile }: ProfileCardProps) => {
+  // Debug the avatar URL
+  console.log(`Profile card avatar for ${profile.name}:`, profile.avatar);
+  
   return (
     <Card className="card-hover">
       <CardHeader className="text-center">

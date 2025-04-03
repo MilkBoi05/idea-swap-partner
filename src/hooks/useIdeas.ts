@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -82,18 +81,21 @@ export const useIdeas = () => {
       // Create a set of saved idea IDs for quick lookup
       const savedIdeaIds = new Set(savedIdeasData ? savedIdeasData.map(item => item.idea_id) : []);
       
-      // Fetch all profiles for authors
+      // Fetch all profiles for authors with debugging
+      console.log("Fetching profiles for authors");
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('*');
       
       if (profilesError) throw profilesError;
+      console.log("Profiles data:", profilesData);
       
       // Create a map of profiles by ID for quick lookup
       const profilesMap = new Map();
       if (profilesData) {
         profilesData.forEach(profile => {
           profilesMap.set(profile.id, profile);
+          console.log(`Profile ${profile.id}:`, profile);
         });
       }
       
@@ -161,9 +163,11 @@ export const useIdeas = () => {
         }
       }
       
-      // Transform ideas data
+      // Transform ideas data with extra logging for avatar URLs
       const transformedIdeas = ideasData ? ideasData.map(idea => {
         const author = profilesMap.get(idea.author_id);
+        console.log(`Author for idea ${idea.id}:`, author);
+        
         return {
           id: idea.id,
           title: idea.title,
@@ -174,19 +178,22 @@ export const useIdeas = () => {
             avatar: author?.avatar || '/placeholder.svg'
           },
           skills: idea.skills || [],
-          collaborators: collaboratorsMap.get(idea.id) || [],
-          comments: commentsMap.get(idea.id) || [],
+          collaborators: collaboratorsMap?.get(idea.id) || [],
+          comments: commentsMap?.get(idea.id) || [],
           likes: idea.likes || 0,
           createdAt: idea.created_at,
           coverImage: idea.cover_image,
-          isSaved: savedIdeaIds.has(idea.id),
+          isSaved: savedIdeaIds?.has(idea.id),
           isOwner: idea.author_id === userId
         };
       }) : [];
       
+      // Log transformed ideas for debugging
+      console.log("Transformed ideas with authors:", transformedIdeas);
+      
       setIdeas(transformedIdeas);
       setUserIdeas(transformedIdeas.filter(idea => idea.author.id === userId));
-      setSavedIdeas(transformedIdeas.filter(idea => savedIdeaIds.has(idea.id)));
+      setSavedIdeas(transformedIdeas.filter(idea => savedIdeaIds?.has(idea.id)));
       setCollaboratingIdeas(transformedIdeas.filter(idea => 
         idea.collaborators.some(collab => collab.id === userId)
       ));

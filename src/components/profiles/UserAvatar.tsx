@@ -15,6 +15,9 @@ const UserAvatar = ({ avatarUrl, name, className = "" }: UserAvatarProps) => {
     .toUpperCase()
     .substring(0, 2);
 
+  // Debug avatar URL issues
+  console.log(`Avatar for ${name}:`, { avatarUrl, initials });
+
   return (
     <Avatar className={className}>
       <AvatarImage src={avatarUrl || undefined} alt={name} />
