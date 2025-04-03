@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -47,9 +46,10 @@ const ProjectBoard = () => {
   const { data: project, isLoading: loadingProject } = useQuery({
     queryKey: ["project", id],
     queryFn: async () => {
+      // First fetch the idea details
       const { data: idea, error } = await supabase
         .from("ideas")
-        .select("*, profiles(name)")
+        .select("*")
         .eq("id", id)
         .single();
 
@@ -58,13 +58,24 @@ const ProjectBoard = () => {
         throw new Error("Failed to load project");
       }
 
+      // Then fetch the author's profile separately
+      const { data: authorProfile, error: profileError } = await supabase
+        .from("profiles")
+        .select("name")
+        .eq("id", idea.author_id)
+        .single();
+      
+      if (profileError) {
+        console.error("Error fetching author profile:", profileError);
+      }
+
       // Format project data
       return {
         id: idea.id,
         title: idea.title,
         description: idea.description,
         author_id: idea.author_id,
-        authorName: idea.profiles?.name || "Unknown",
+        authorName: authorProfile?.name || "Unknown",
         skills: idea.skills || [],
         createdAt: new Date(idea.created_at).toLocaleDateString(),
       } as Project;
@@ -78,7 +89,7 @@ const ProjectBoard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("collaborators")
-        .select("user_id, role, profiles:user_id(id, name, avatar)")
+        .select("user_id, role")
         .eq("idea_id", id);
 
       if (error) {
@@ -86,12 +97,30 @@ const ProjectBoard = () => {
         return [];
       }
 
-      return data.map((collab: any) => ({
-        id: collab.profiles?.id,
-        name: collab.profiles?.name || "Unknown",
-        avatar: collab.profiles?.avatar,
-        role: collab.role,
-      })) as Collaborator[];
+      // Get profile information for each collaborator
+      const collaboratorsWithProfiles = [];
+      
+      for (const collab of data || []) {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("id, name, avatar")
+          .eq("id", collab.user_id)
+          .single();
+          
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
+          continue;
+        }
+        
+        collaboratorsWithProfiles.push({
+          id: profile.id,
+          name: profile.name || "Unknown",
+          avatar: profile.avatar,
+          role: collab.role,
+        });
+      }
+      
+      return collaboratorsWithProfiles as Collaborator[];
     },
     enabled: !!id,
   });
