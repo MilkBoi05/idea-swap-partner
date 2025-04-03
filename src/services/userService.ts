@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadProfileImage } from "./storageService";
@@ -83,7 +84,8 @@ export const useUserProfile = () => {
       let avatarUrl = profile.profileImage;
       if (profilePicture) {
         try {
-          console.log("Uploading profile image for user:", userId);
+          console.log("Uploading profile image for user:", userId, profilePicture);
+          // Wait for the upload to complete and get the URL
           const uploadedUrl = await uploadProfileImage(userId, profilePicture);
           if (uploadedUrl) {
             console.log("Profile image uploaded successfully:", uploadedUrl);

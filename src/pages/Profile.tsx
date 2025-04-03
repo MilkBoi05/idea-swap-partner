@@ -89,11 +89,14 @@ const Profile = () => {
   const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      console.log("Selected image file:", file.name, file.type, file.size);
       setProfileImage(file);
       
       const reader = new FileReader();
       reader.onloadend = () => {
-        setProfileImagePreview(reader.result as string);
+        const preview = reader.result as string;
+        console.log("Preview image generated");
+        setProfileImagePreview(preview);
       };
       reader.readAsDataURL(file);
     }
@@ -116,6 +119,8 @@ const Profile = () => {
     try {
       setIsSaving(true);
       
+      console.log("Saving profile with image:", profileImage ? profileImage.name : "No new image");
+      
       const result = await updateUserProfile(userId, {
         name: profileForm.name,
         title: profileForm.title,
@@ -129,8 +134,28 @@ const Profile = () => {
       }, profileImage);
       
       if (result) {
+        setProfileForm(prev => ({
+          ...prev,
+          name: result.name || prev.name,
+          title: result.title || prev.title,
+          bio: result.bio || prev.bio,
+          location: result.location || prev.location,
+          website: result.website || prev.website,
+          github: result.github || prev.github,
+          twitter: result.twitter || prev.twitter,
+          linkedin: result.linkedin || prev.linkedin,
+          profileImage: result.profileImage || prev.profileImage
+        }));
+        
+        if (result.profileImage && result.profileImage !== profileForm.profileImage) {
+          console.log("Updated profile image URL:", result.profileImage);
+          setProfileForm(prev => ({ ...prev, profileImage: result.profileImage }));
+        }
+        
         setEditMode(false);
         setProfileImage(null); // Clear file selection after upload
+        
+        setProfileImagePreview(null);
       }
     } catch (error) {
       console.error("Error updating profile:", error);

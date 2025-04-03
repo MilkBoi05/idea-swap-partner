@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 // Storage bucket names
@@ -57,28 +56,44 @@ export const uploadProfileImage = async (userId: string, file: File) => {
   }
   
   try {
+    // Validate file input
+    if (!file || !(file instanceof File)) {
+      console.error('Invalid file provided for upload', file);
+      return null;
+    }
+
     const fileExt = file.name.split('.').pop();
     const filePath = `${userId}/profile.${fileExt}`;
+    
+    // Log important information for debugging
+    console.log(`Uploading file: ${file.name} (${file.type}, ${file.size} bytes)`);
+    console.log(`Target path: ${BUCKETS.PROFILES}/${filePath}`);
     
     const { data, error } = await supabase.storage
       .from(BUCKETS.PROFILES)
       .upload(filePath, file, {
         upsert: true,
+        cacheControl: '3600',
+        contentType: file.type,
       });
       
     if (error) {
-      throw error;
+      console.error('Supabase storage upload error:', error);
+      return null;
     }
+    
+    console.log('Upload successful, getting public URL');
     
     // Get the public URL for the uploaded file
     const { data: publicURL } = supabase.storage
       .from(BUCKETS.PROFILES)
       .getPublicUrl(filePath);
-      
+    
+    console.log('Public URL:', publicURL.publicUrl);
     return publicURL.publicUrl;
   } catch (error) {
     console.error('Error uploading profile image:', error);
-    return null; // Return null instead of throwing the error
+    return null;
   }
 };
 
