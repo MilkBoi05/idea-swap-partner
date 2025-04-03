@@ -55,7 +55,6 @@ const Profile = () => {
       if (userId) {
         const profile = await getUserProfile(userId);
         if (profile) {
-          // Only set initial values once
           setProfileForm({
             name: profile.name || "",
             title: profile.title || "",
@@ -69,11 +68,10 @@ const Profile = () => {
             profileImage: profile.profileImage || ""
           });
 
-            setSelectedSkills(profile.skills || []);
+          setSelectedSkills(profile.skills || []);
 
-            if (profile.profileImage) {
-              setProfileImagePreview(profile.profileImage);
-            }
+          if (profile.profileImage) {
+            setProfileImagePreview(profile.profileImage);
           }
         }
       }
