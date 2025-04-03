@@ -34,9 +34,10 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
     // Handle navigation after modal is closed completely
     if (!isOpen && pendingNavigation) {
       const timer = setTimeout(() => {
+        console.log("Navigating to:", pendingNavigation);
         navigate(pendingNavigation);
         setPendingNavigation(null);
-      }, 100); // Short delay to ensure modal is closed
+      }, 300); // Increased delay to ensure modal is fully closed
       
       return () => clearTimeout(timer);
     }
@@ -104,11 +105,18 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
       return;
     }
     
-    // Store the navigation path but don't navigate immediately
+    // Create the message path and force navigation after modal closes
     console.log("Setting up navigation to message", idea.author.name);
     const messagePath = `/messages?authorId=${idea.author.id}&authorName=${encodeURIComponent(idea.author.name)}`;
-    setPendingNavigation(messagePath);
-    onClose(); 
+    
+    // First close the modal
+    onClose();
+    
+    // Then set up navigation with a direct timeout to ensure it happens
+    setTimeout(() => {
+      console.log("Direct navigation to:", messagePath);
+      navigate(messagePath);
+    }, 400);
   };
 
   return (
@@ -212,7 +220,6 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
                 <Button 
                   onClick={handleMessageAuthor} 
                   size="sm"
-                  type="button"
                 >
                   Message {idea.author.name.split(" ")[0]}
                 </Button>
