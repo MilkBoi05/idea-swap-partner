@@ -10,6 +10,12 @@ import { Idea, Comment, useIdeas } from "@/hooks/useIdeas";
 import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger
+} from "@/components/ui/context-menu";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -137,21 +143,35 @@ const IdeaDetailModal = ({ idea, isOpen, onClose, onMessageAuthor }: IdeaDetailM
                       <span className="text-xs text-muted-foreground">
                         {formatDate(comment.createdAt)}
                       </span>
+                      <span className="text-xs text-muted-foreground">
+                        {formatDate(comment.createdAt)}
+                      </span>
                       {comment.author.id === userId && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 px-2 ml-auto"
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            const success = await deleteComment(comment.id, idea.id);
-                            if (success) {
-                              setComments(comments.filter(c => c.id !== comment.id));
-                            }
-                          }}
-                        >
-                          Delete
-                        </Button>
+                        <ContextMenu>
+                          <ContextMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-2 ml-auto"
+                            >
+                              •••
+                            </Button>
+                          </ContextMenuTrigger>
+                          <ContextMenuContent>
+                            <ContextMenuItem
+                              className="text-red-600"
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                const success = await deleteComment(comment.id, idea.id);
+                                if (success) {
+                                  setComments(comments.filter(c => c.id !== comment.id));
+                                }
+                              }}
+                            >
+                              Delete Comment
+                            </ContextMenuItem>
+                          </ContextMenuContent>
+                        </ContextMenu>
                       )}
                     </div>
                     <p className="text-sm">{comment.text}</p>
