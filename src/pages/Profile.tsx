@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import SkillTag from "@/components/skills/SkillTag";
 import IdeaCard from "@/components/ideas/IdeaCard";
 import { useIdeas } from "@/hooks/useIdeas";
-import { Edit3, UploadCloud, Briefcase, Calendar, List } from "lucide-react";
+import { Edit3, UploadCloud, Briefcase, Calendar, List, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/services/userService";
 import { toast } from "sonner";
@@ -28,7 +28,7 @@ const allSkills = [
 const Profile = () => {
   const navigate = useNavigate();
   const { userId, userEmail } = useAuth();
-  const { getUserProfile, updateUserProfile, loading } = useUserProfile();
+  const { getUserProfile, updateUserProfile, loading: profileLoading } = useUserProfile();
   const { userIdeas, collaboratingIdeas, loading: ideasLoading } = useIdeas();
   
   const [editMode, setEditMode] = useState(false);
@@ -69,7 +69,6 @@ const Profile = () => {
           
           setSelectedSkills(profile.skills || []);
           
-          // Set existing profile image
           if (profile.profileImage) {
             setProfileImagePreview(profile.profileImage);
           }
@@ -92,7 +91,6 @@ const Profile = () => {
       const file = e.target.files[0];
       setProfileImage(file);
       
-      // Create a preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setProfileImagePreview(reader.result as string);
@@ -110,11 +108,15 @@ const Profile = () => {
   };
   
   const handleSaveProfile = async () => {
-    if (!userId) return;
+    if (!userId) {
+      toast.error("You must be logged in to update your profile");
+      return;
+    }
     
     try {
       setIsSaving(true);
-      await updateUserProfile(userId, {
+      
+      const result = await updateUserProfile(userId, {
         name: profileForm.name,
         title: profileForm.title,
         bio: profileForm.bio,
@@ -126,14 +128,15 @@ const Profile = () => {
         linkedin: profileForm.linkedin
       }, profileImage);
       
-      setEditMode(false);
-      setProfileImage(null); // Clear file selection after upload
-      toast.success("Profile updated successfully");
+      if (result) {
+        setEditMode(false);
+        setProfileImage(null); // Clear file selection after upload
+      }
     } catch (error) {
       console.error("Error updating profile:", error);
       toast.error("Failed to update profile");
     } finally {
-      setIsSaving(false); // Make sure to reset the loading state
+      setIsSaving(false); // Always reset the saving state, whether successful or not
     }
   };
   
@@ -241,11 +244,28 @@ const Profile = () => {
               <div className="mt-5 sm:mt-0">
                 {editMode ? (
                   <div className="space-x-2">
-                    <Button variant="ghost" onClick={() => setEditMode(false)}>
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => {
+                        setEditMode(false);
+                        setIsSaving(false);
+                      }} 
+                      disabled={isSaving}
+                    >
                       Cancel
                     </Button>
-                    <Button onClick={handleSaveProfile} disabled={isSaving}>
-                      {isSaving ? "Saving..." : "Save Profile"}
+                    <Button 
+                      onClick={handleSaveProfile} 
+                      disabled={isSaving || profileLoading}
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        "Save Profile"
+                      )}
                     </Button>
                   </div>
                 ) : (

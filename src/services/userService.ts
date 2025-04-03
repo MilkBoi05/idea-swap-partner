@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadProfileImage } from "./storageService";
@@ -98,17 +97,9 @@ export const useUserProfile = () => {
         }
       }
       
-      // Create update object with only supported fields
-      // First, get the current profile to check which fields are present
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      // Create an update data object with just the fields we know exist
+      // Create an update object with only supported fields
       const updateData: Record<string, any> = {
-        name: profile.name,
+        name: profile.name || 'User',  // Ensure name has a default
         updated_at: new Date().toISOString()
       };
       
@@ -117,27 +108,23 @@ export const useUserProfile = () => {
         updateData.avatar = avatarUrl;
       }
 
-      // Only include fields that exist in the current schema and are provided in the profile update
-      if (profileData) {
-        if ('bio' in profileData && profile.bio !== undefined) updateData['bio'] = profile.bio;
-        if ('title' in profileData && profile.title !== undefined) updateData['title'] = profile.title;
-        if ('skills' in profileData && profile.skills !== undefined) updateData['skills'] = profile.skills;
-        if ('location' in profileData && profile.location !== undefined) updateData['location'] = profile.location;
-        if ('website' in profileData && profile.website !== undefined) updateData['website'] = profile.website;
-        if ('github' in profileData && profile.github !== undefined) updateData['github'] = profile.github;
-        if ('twitter' in profileData && profile.twitter !== undefined) updateData['twitter'] = profile.twitter;
-        if ('linkedin' in profileData && profile.linkedin !== undefined) updateData['linkedin'] = profile.linkedin;
-      }
+      // Add optional fields if they exist in the profile update
+      if (profile.bio !== undefined) updateData.bio = profile.bio;
+      if (profile.title !== undefined) updateData.title = profile.title;
+      if (profile.skills !== undefined) updateData.skills = profile.skills;
+      if (profile.location !== undefined) updateData.location = profile.location;
+      if (profile.website !== undefined) updateData.website = profile.website;
+      if (profile.github !== undefined) updateData.github = profile.github;
+      if (profile.twitter !== undefined) updateData.twitter = profile.twitter;
+      if (profile.linkedin !== undefined) updateData.linkedin = profile.linkedin;
       
       console.log("Updating profile with data:", updateData);
       
       // Update profile in Supabase
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('profiles')
         .update(updateData)
-        .eq('id', userId)
-        .select()
-        .single();
+        .eq('id', userId);
         
       if (error) {
         console.error("Error updating profile:", error);
