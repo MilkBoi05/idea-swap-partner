@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { Comment } from "@/hooks/useIdeas";
+import { Comment } from "@/types/idea";
 import { toast } from "sonner";
 import CommentItem from "./CommentItem";
 
@@ -47,17 +47,21 @@ const CommentsSection = ({
     }
   };
 
-  const handleDeleteComment = (commentId: string) => {
+  const handleDeleteComment = async (commentId: string): Promise<boolean> => {
     if (!isAuthenticated) {
       toast.error("Please sign in to delete comments");
-      return;
+      return false;
     }
     
     console.log(`CommentsSection: Handling delete for comment ${commentId}`);
-    onDeleteComment(commentId).catch(error => {
+    try {
+      await onDeleteComment(commentId);
+      return true;
+    } catch (error) {
       console.error("Error deleting comment:", error);
       toast.error("Failed to delete comment");
-    });
+      return false;
+    }
   };
 
   return (
