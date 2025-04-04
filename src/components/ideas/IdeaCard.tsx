@@ -23,10 +23,9 @@ const IdeaCard = ({
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [currentIdea, setCurrentIdea] = useState<Idea>(idea);
   
-  // Initialize comment count from idea comments array - ensuring it's only set once on mount
-  const [commentCount, setCommentCount] = useState(
-    Array.isArray(idea.comments) ? idea.comments.length : 0
-  );
+  // Get the initial comment count directly from the idea prop
+  // This is crucial - we need to use idea.comments.length directly and not reset it
+  const commentCount = idea.comments?.length || 0;
   
   const {
     userId
@@ -35,7 +34,7 @@ const IdeaCard = ({
     refreshIdeas
   } = useIdeas();
 
-  // Only update currentIdea without resetting the comment count when idea prop changes
+  // Only update currentIdea when idea prop changes
   useEffect(() => {
     setCurrentIdea(idea);
   }, [idea]);
@@ -73,12 +72,6 @@ const IdeaCard = ({
       console.error("Error deleting idea:", error);
       toast.error("Failed to delete idea");
     }
-  };
-
-  // Called when a comment is added or deleted in the modal
-  const handleCommentCountChange = (newCount: number) => {
-    console.log(`Updating comment count to ${newCount}`);
-    setCommentCount(newCount);
   };
 
   // Check if user is the owner of the idea
@@ -138,8 +131,7 @@ const IdeaCard = ({
         idea={currentIdea} 
         isOpen={showDetailModal} 
         onClose={() => setShowDetailModal(false)} 
-        onMessageAuthor={handleMessageAuthor} 
-        onCommentCountChange={handleCommentCountChange}
+        onMessageAuthor={handleMessageAuthor}
       />
     </ContextMenu>;
 };
