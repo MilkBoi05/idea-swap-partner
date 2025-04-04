@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -349,29 +348,12 @@ export const useIdeas = () => {
     try {
       console.log(`useIdeas: Starting database delete for comment ${commentId}`);
       
-      // First, verify the comment exists and belongs to the current user
-      const { data: commentData, error: fetchError } = await supabase
-        .from('comments')
-        .select('*')
-        .eq('id', commentId)
-        .single();
-      
-      if (fetchError) {
-        console.error("Error fetching comment:", fetchError);
-        return false;
-      }
-      
-      if (commentData.author_id !== userId) {
-        console.error("User doesn't have permission to delete this comment");
-        toast.error("You can only delete your own comments");
-        return false;
-      }
-      
-      // Delete the comment from the database
+      // Skip the verification step and directly attempt to delete
+      // This avoids the error when comment might already be removed from UI state
       const { error } = await supabase
         .from('comments')
         .delete()
-        .eq('id', commentId);
+        .match({ id: commentId, author_id: userId });
       
       if (error) {
         console.error("Database error when deleting comment:", error);

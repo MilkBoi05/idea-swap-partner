@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import SkillTag from "@/components/skills/SkillTag";
@@ -33,12 +32,10 @@ const IdeaDetailModal = ({
   const [comments, setComments] = useState<Comment[]>([]);
   const navigate = useNavigate();
   
-  // Initialize comments from idea when the modal opens
   useEffect(() => {
     if (isOpen && idea.comments) {
       setComments(idea.comments);
       
-      // Immediately notify the parent of the comment count from the idea
       if (onCommentCountChange) {
         console.log(`IdeaDetailModal: Initial comment count notification: ${idea.comments.length}`);
         onCommentCountChange(idea.comments.length);
@@ -46,7 +43,6 @@ const IdeaDetailModal = ({
     }
   }, [isOpen, idea.comments, onCommentCountChange]);
 
-  // Update comment count in parent component immediately when comments change
   useEffect(() => {
     if (onCommentCountChange && isOpen) {
       console.log(`IdeaDetailModal: Notifying parent of comment count change to ${comments.length}`);
@@ -101,22 +97,24 @@ const IdeaDetailModal = ({
     console.log(`IdeaDetailModal: Deleting comment ${commentId} for idea ${idea.id}`);
     
     try {
-      // Optimistically remove from local state first for immediate UI update
-      setComments(prev => prev.filter(comment => comment.id !== commentId));
+      setComments(prev => {
+        const newComments = prev.filter(comment => comment.id !== commentId);
+        console.log(`IdeaDetailModal: Optimistically updated to ${newComments.length} comments`);
+        return newComments;
+      });
       
-      // Then attempt to delete from database
-      await deleteComment(commentId, idea.id);
-      console.log("Delete operation completed");
+      const success = await deleteComment(commentId, idea.id);
+      
+      if (!success) {
+        console.log("Delete operation failed, reverting optimistic update");
+        setComments(idea.comments);
+        return Promise.reject(new Error("Failed to delete comment"));
+      }
+      
+      console.log("Delete operation completed successfully");
       return Promise.resolve();
     } catch (error) {
       console.error("Error in handleDeleteComment:", error);
-      
-      // If deletion fails, restore the comment (this is unlikely to happen as we already filtered it out)
-      const deletedComment = idea.comments.find(comment => comment.id === commentId);
-      if (deletedComment) {
-        setComments(prev => [...prev, deletedComment]);
-      }
-      
       return Promise.reject(error);
     }
   };

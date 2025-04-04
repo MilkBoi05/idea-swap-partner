@@ -27,12 +27,14 @@ const CommentItem = ({ comment, userId, onDeleteComment }: CommentItemProps) => 
     // Show immediate feedback
     toast.info("Deleting comment...");
     
-    try {
-      onDeleteComment(comment.id);
-    } catch (err) {
-      console.error("Failed to delete comment:", err);
-      toast.error("Failed to delete comment");
-    }
+    onDeleteComment(comment.id)
+      .then(() => {
+        toast.success("Comment deleted successfully");
+      })
+      .catch((err) => {
+        console.error("Failed to delete comment:", err);
+        toast.error("Failed to delete comment");
+      });
   };
 
   return (
