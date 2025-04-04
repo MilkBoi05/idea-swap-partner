@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,9 +22,7 @@ const IdeaCard = ({
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [currentIdea, setCurrentIdea] = useState<Idea>(idea);
   
-  // Get the initial comment count directly from the idea prop
-  // This is crucial - we need to use idea.comments.length directly and not reset it
-  const commentCount = idea.comments?.length || 0;
+  const [commentCount, setCommentCount] = useState(idea.comments?.length || 0);
   
   const {
     userId
@@ -34,9 +31,9 @@ const IdeaCard = ({
     refreshIdeas
   } = useIdeas();
 
-  // Only update currentIdea when idea prop changes
   useEffect(() => {
     setCurrentIdea(idea);
+    setCommentCount(idea.comments?.length || 0);
   }, [idea]);
 
   const toggleLike = (e: React.MouseEvent) => {
@@ -62,11 +59,9 @@ const IdeaCard = ({
     e.stopPropagation(); // Prevent card click from triggering
 
     try {
-      // In a real app, you would call an API to delete the idea
       console.log(`Deleting idea with id: ${currentIdea.id}`);
       toast.success("Idea deleted successfully");
 
-      // Refresh ideas after deletion
       await refreshIdeas();
     } catch (error) {
       console.error("Error deleting idea:", error);
@@ -74,7 +69,11 @@ const IdeaCard = ({
     }
   };
 
-  // Check if user is the owner of the idea
+  const handleCommentCountChange = (newCount: number) => {
+    console.log(`IdeaCard: Updating comment count to ${newCount}`);
+    setCommentCount(newCount);
+  };
+
   const isOwner = currentIdea.author.id === userId;
   
   return <ContextMenu>
@@ -132,6 +131,7 @@ const IdeaCard = ({
         isOpen={showDetailModal} 
         onClose={() => setShowDetailModal(false)} 
         onMessageAuthor={handleMessageAuthor}
+        onCommentCountChange={handleCommentCountChange}
       />
     </ContextMenu>;
 };

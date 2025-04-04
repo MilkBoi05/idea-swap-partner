@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import SkillTag from "@/components/skills/SkillTag";
@@ -42,6 +43,7 @@ const IdeaDetailModal = ({
   // Update comment count in parent component immediately when comments change
   useEffect(() => {
     if (onCommentCountChange) {
+      console.log(`IdeaDetailModal: Notifying parent of comment count change to ${comments.length}`);
       onCommentCountChange(comments.length);
     }
   }, [comments.length, onCommentCountChange]);
@@ -83,6 +85,7 @@ const IdeaDetailModal = ({
       const savedComment = await addComment(commentData);
       
       if (savedComment) {
+        console.log("Comment added successfully, updating local state");
         setComments(prev => [...prev, savedComment]);
       }
     }
