@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ const IdeaCard = ({
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [currentIdea, setCurrentIdea] = useState<Idea>(idea);
   
+  // Initialize comment count from the idea prop directly
   const [commentCount, setCommentCount] = useState(idea.comments?.length || 0);
   
   const {
@@ -31,9 +33,10 @@ const IdeaCard = ({
     refreshIdeas
   } = useIdeas();
 
+  // Update the current idea when the prop changes
   useEffect(() => {
     setCurrentIdea(idea);
-    setCommentCount(idea.comments?.length || 0);
+    // Don't update comment count here, as it will overwrite user actions
   }, [idea]);
 
   const toggleLike = (e: React.MouseEvent) => {

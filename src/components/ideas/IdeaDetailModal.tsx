@@ -37,16 +37,22 @@ const IdeaDetailModal = ({
   useEffect(() => {
     if (isOpen && idea.comments) {
       setComments(idea.comments);
+      
+      // Immediately notify the parent of the comment count from the idea
+      if (onCommentCountChange) {
+        console.log(`IdeaDetailModal: Initial comment count notification: ${idea.comments.length}`);
+        onCommentCountChange(idea.comments.length);
+      }
     }
-  }, [isOpen, idea.comments]);
+  }, [isOpen, idea.comments, onCommentCountChange]);
 
   // Update comment count in parent component immediately when comments change
   useEffect(() => {
-    if (onCommentCountChange) {
+    if (onCommentCountChange && isOpen) {
       console.log(`IdeaDetailModal: Notifying parent of comment count change to ${comments.length}`);
       onCommentCountChange(comments.length);
     }
-  }, [comments.length, onCommentCountChange]);
+  }, [comments.length, onCommentCountChange, isOpen]);
 
   const toggleLike = () => {
     if (isLiked) {
