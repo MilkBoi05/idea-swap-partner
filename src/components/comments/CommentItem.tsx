@@ -3,13 +3,13 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import UserAvatar from "@/components/profiles/UserAvatar";
-import { Comment } from "@/hooks/useIdeas";
+import { Comment } from "@/types/idea";
 import { toast } from "sonner";
 
 type CommentItemProps = {
   comment: Comment;
   userId?: string | null;
-  onDeleteComment: (commentId: string) => void;
+  onDeleteComment: (commentId: string) => Promise<boolean>;
 };
 
 const CommentItem = ({ comment, userId, onDeleteComment }: CommentItemProps) => {

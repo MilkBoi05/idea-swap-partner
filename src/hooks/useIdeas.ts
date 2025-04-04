@@ -1,44 +1,19 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { Idea, Comment } from "@/types/idea";
+import {
+  fetchIdeasFromApi,
+  saveIdeaToApi,
+  unsaveIdeaFromApi,
+  addCommentToApi,
+  deleteCommentFromApi,
+  createIdeaInApi
+} from "@/services/ideaService";
 
-// Define the types for our idea data
-export type IdeaAuthor = {
-  id: string;
-  name: string;
-  avatar: string;
-};
-
-export type Comment = {
-  id: string;
-  author: IdeaAuthor;
-  text: string;
-  createdAt: string;
-  ideaId: string;
-};
-
-export type Collaborator = {
-  id: string;
-  name: string;
-  avatar?: string;
-  role?: string;
-};
-
-export type Idea = {
-  id: string;
-  title: string;
-  description: string;
-  author: IdeaAuthor;
-  skills: string[];
-  collaborators: Collaborator[];
-  comments: Comment[];
-  likes: number;
-  createdAt: string;
-  coverImage?: string;
-  isSaved?: boolean;
-  isOwner?: boolean;
-};
+// Re-export types from the types file for backward compatibility
+export type { IdeaAuthor, Comment, Collaborator, Idea } from "@/types/idea";
 
 export const useIdeas = () => {
   const { userId, userName, isAuthenticated } = useAuth();
@@ -62,144 +37,14 @@ export const useIdeas = () => {
     try {
       setLoading(true);
       
-      // Fetch all ideas
-      const { data: ideasData, error: ideasError } = await supabase
-        .from('ideas')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (ideasError) throw ideasError;
-      
-      // Fetch user's saved ideas
-      const { data: savedIdeasData, error: savedIdeasError } = await supabase
-        .from('saved_ideas')
-        .select('idea_id')
-        .eq('user_id', userId);
-      
-      if (savedIdeasError) throw savedIdeasError;
-      
-      // Create a set of saved idea IDs for quick lookup
-      const savedIdeaIds = new Set(savedIdeasData ? savedIdeasData.map(item => item.idea_id) : []);
-      
-      // Fetch all profiles for authors with debugging
-      console.log("Fetching profiles for authors");
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*');
-      
-      if (profilesError) throw profilesError;
-      console.log("Profiles data:", profilesData);
-      
-      // Create a map of profiles by ID for quick lookup
-      const profilesMap = new Map();
-      if (profilesData) {
-        profilesData.forEach(profile => {
-          profilesMap.set(profile.id, profile);
-          console.log(`Profile ${profile.id}:`, profile);
-        });
-      }
-      
-      // Fetch collaborators for all ideas
-      const { data: collaboratorsData, error: collaboratorsError } = await supabase
-        .from('collaborators')
-        .select('*');
-      
-      if (collaboratorsError) throw collaboratorsError;
-      
-      // Create a map of collaborators by idea ID
-      const collaboratorsMap = new Map();
-      if (collaboratorsData) {
-        for (const collab of collaboratorsData) {
-          const ideaId = collab.idea_id;
-          if (!collaboratorsMap.has(ideaId)) {
-            collaboratorsMap.set(ideaId, []);
-          }
-          
-          // Get profile for this collaborator
-          const profile = profilesMap.get(collab.user_id);
-          
-          if (profile) {
-            collaboratorsMap.get(ideaId).push({
-              id: collab.id,
-              name: profile.name || 'Unknown User',
-              avatar: profile.avatar || '/placeholder.svg',
-              role: collab.role
-            });
-          }
-        }
-      }
-      
-      // Fetch comments for all ideas at once for efficiency
-      const { data: commentsData, error: commentsError } = await supabase
-        .from('comments')
-        .select('*')
-        .order('created_at', { ascending: true });
-      
-      if (commentsError) throw commentsError;
-      
-      console.log("All comments data:", commentsData);
-      
-      // Create a map of comments by idea ID
-      const commentsMap = new Map();
-      if (commentsData) {
-        for (const comment of commentsData) {
-          const ideaId = comment.idea_id;
-          if (!commentsMap.has(ideaId)) {
-            commentsMap.set(ideaId, []);
-          }
-          
-          // Get profile for this comment author
-          const author = profilesMap.get(comment.author_id);
-          
-          commentsMap.get(ideaId).push({
-            id: comment.id,
-            text: comment.text,
-            createdAt: comment.created_at,
-            ideaId: comment.idea_id,
-            author: {
-              id: comment.author_id,
-              name: author ? author.name : 'Unknown User',
-              avatar: author ? author.avatar : '/placeholder.svg'
-            }
-          });
-        }
-      }
-      
-      // Transform ideas data with extra logging for avatar URLs
-      const transformedIdeas = ideasData ? ideasData.map(idea => {
-        const author = profilesMap.get(idea.author_id);
-        console.log(`Author for idea ${idea.id}:`, author);
-        
-        // Ensure comments array is populated for this idea
-        const ideaComments = commentsMap.get(idea.id) || [];
-        console.log(`Idea ${idea.id} has ${ideaComments.length} comments`);
-        
-        return {
-          id: idea.id,
-          title: idea.title,
-          description: idea.description,
-          author: {
-            id: author?.id || idea.author_id,
-            name: author?.name || 'Unknown User',
-            avatar: author?.avatar || '/placeholder.svg'
-          },
-          skills: idea.skills || [],
-          collaborators: collaboratorsMap?.get(idea.id) || [],
-          comments: ideaComments,
-          likes: idea.likes || 0,
-          createdAt: idea.created_at,
-          coverImage: idea.cover_image,
-          isSaved: savedIdeaIds?.has(idea.id),
-          isOwner: idea.author_id === userId
-        };
-      }) : [];
+      const transformedIdeas = await fetchIdeasFromApi(userId);
       
       // Log transformed ideas for debugging
       console.log("Transformed ideas with authors and comment counts:", transformedIdeas);
       
       setIdeas(transformedIdeas);
       setUserIdeas(transformedIdeas.filter(idea => idea.author.id === userId));
-      setSavedIdeas(transformedIdeas.filter(idea => savedIdeaIds?.has(idea.id)));
+      setSavedIdeas(transformedIdeas.filter(idea => idea.isSaved));
       setCollaboratingIdeas(transformedIdeas.filter(idea => 
         idea.collaborators.some(collab => collab.id === userId)
       ));
@@ -225,11 +70,7 @@ export const useIdeas = () => {
     }
     
     try {
-      const { error } = await supabase
-        .from('saved_ideas')
-        .insert({ user_id: userId, idea_id: ideaId });
-      
-      if (error) throw error;
+      await saveIdeaToApi(ideaId, userId || '');
       
       // Update local state
       setIdeas(ideas.map(idea => 
@@ -239,7 +80,7 @@ export const useIdeas = () => {
       // Update saved ideas list
       const ideaToSave = ideas.find(idea => idea.id === ideaId);
       if (ideaToSave) {
-        setSavedIdeas([...savedIdeas, ideaToSave]);
+        setSavedIdeas([...savedIdeas, {...ideaToSave, isSaved: true}]);
       }
       
       toast.success("Idea saved successfully");
@@ -254,12 +95,7 @@ export const useIdeas = () => {
     if (!isAuthenticated) return;
     
     try {
-      const { error } = await supabase
-        .from('saved_ideas')
-        .delete()
-        .match({ user_id: userId, idea_id: ideaId });
-      
-      if (error) throw error;
+      await unsaveIdeaFromApi(ideaId, userId || '');
       
       // Update local state
       setIdeas(ideas.map(idea => 
@@ -284,37 +120,7 @@ export const useIdeas = () => {
     }
     
     try {
-      const { data, error } = await supabase
-        .from('comments')
-        .insert({
-          idea_id: comment.ideaId,
-          author_id: userId,
-          text: comment.text
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      // Get profile for the comment author
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-      
-      // Transform the comment data
-      const newComment: Comment = {
-        id: data.id,
-        text: data.text,
-        ideaId: data.idea_id,
-        createdAt: data.created_at,
-        author: {
-          id: userId || '',
-          name: profileData?.name || userName || 'Anonymous User',
-          avatar: profileData?.avatar || '/placeholder.svg'
-        }
-      };
+      const newComment = await addCommentToApi(comment, userId || '');
       
       // Update local state
       const updatedIdeas = ideas.map(idea => {
@@ -348,36 +154,28 @@ export const useIdeas = () => {
     try {
       console.log(`useIdeas: Starting database delete for comment ${commentId}`);
       
-      // Skip the verification step and directly attempt to delete
-      // This avoids the error when comment might already be removed from UI state
-      const { error } = await supabase
-        .from('comments')
-        .delete()
-        .match({ id: commentId, author_id: userId });
+      const success = await deleteCommentFromApi(commentId, userId || '');
       
-      if (error) {
-        console.error("Database error when deleting comment:", error);
-        throw error;
+      if (success) {
+        console.log(`useIdeas: Database delete successful for comment ${commentId}`);
+        
+        // Update local state
+        const updatedIdeas = ideas.map(idea => {
+          if (idea.id === ideaId) {
+            return {
+              ...idea,
+              comments: idea.comments.filter(comment => comment.id !== commentId)
+            };
+          }
+          return idea;
+        });
+        
+        setIdeas(updatedIdeas);
+        setUserIdeas(updatedIdeas.filter(idea => idea.author.id === userId));
+        setSavedIdeas(updatedIdeas.filter(idea => idea.isSaved));
       }
       
-      console.log(`useIdeas: Database delete successful for comment ${commentId}`);
-      
-      // Update local state
-      const updatedIdeas = ideas.map(idea => {
-        if (idea.id === ideaId) {
-          return {
-            ...idea,
-            comments: idea.comments.filter(comment => comment.id !== commentId)
-          };
-        }
-        return idea;
-      });
-      
-      setIdeas(updatedIdeas);
-      setUserIdeas(updatedIdeas.filter(idea => idea.author.id === userId));
-      setSavedIdeas(updatedIdeas.filter(idea => idea.isSaved));
-      
-      return true;
+      return success;
     } catch (error: any) {
       console.error("Error deleting comment:", error);
       toast.error(error.message || "Failed to delete comment");
@@ -386,51 +184,14 @@ export const useIdeas = () => {
   };
 
   // Create a new idea
-  const createIdea = async (idea: Omit<Idea, 'id' | 'author' | 'collaborators' | 'comments' | 'likes' | 'createdAt' | 'isOwner' | 'isSaved' | 'coverImage'>) => {
+  const createIdea = async (idea: Pick<Idea, 'title' | 'description' | 'skills'>) => {
     if (!isAuthenticated) {
       toast.error("Please sign in to post an idea");
       return null;
     }
     
     try {
-      const { data, error } = await supabase
-        .from('ideas')
-        .insert({
-          title: idea.title,
-          description: idea.description,
-          skills: idea.skills || [],
-          author_id: userId
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      // Get author profile
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-      
-      // Create new idea object
-      const newIdea: Idea = {
-        id: data.id,
-        title: data.title,
-        description: data.description,
-        skills: data.skills || [],
-        author: {
-          id: userId || '',
-          name: profileData?.name || userName || "Anonymous User",
-          avatar: profileData?.avatar || "/placeholder.svg",
-        },
-        collaborators: [],
-        comments: [],
-        likes: 0,
-        createdAt: data.created_at,
-        isOwner: true,
-        isSaved: false,
-      };
+      const newIdea = await createIdeaInApi(idea, userId || '', userName);
       
       // Update local state
       setIdeas([newIdea, ...ideas]);
